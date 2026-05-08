@@ -146,6 +146,9 @@ importers:
       sonner:
         specifier: ^1.7.1
         version: 1.7.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      swisseph-wasm:
+        specifier: ^0.0.5
+        version: 0.0.5
       swr:
         specifier: ^2.4.1
         version: 2.4.1(react@19.2.4)
@@ -1691,6 +1694,10 @@ packages:
       babel-plugin-macros:
         optional: true
 
+  swisseph-wasm@0.0.5:
+    resolution: {integrity: sha512-v4n6gV79pWJEW0EbIo4P7B2of6Wnl3MLkrJdaEBf7Fj5zjyMYX1FWsqNnsJbydt4ztROF+UCa+I+UGdT4JVfTw==}
+    engines: {node: '>=14.0.0'}
+
   swr@2.4.1:
     resolution: {integrity: sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==}
     peerDependencies:
@@ -3151,6 +3158,8 @@ snapshots:
     dependencies:
       client-only: 0.0.1
       react: 19.2.4
+
+  swisseph-wasm@0.0.5: {}
 
   swr@2.4.1(react@19.2.4):
     dependencies:
