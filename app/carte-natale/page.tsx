@@ -1,21 +1,47 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useLanguage } from '@/contexts/language-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Sparkles, Loader2, Mail, Check, ArrowLeft, Moon, Sun } from 'lucide-react'
-import { calculateNatalChart, getCityCoordinates, type NatalChartData } from '@/lib/swisseph'
-import { countries } from '@/lib/astrology-data'
+import { Sparkles, Loader2, Mail, Check, ArrowLeft, Moon, Sun, MapPin, Search, X } from 'lucide-react'
+import { calculateNatalChart, type NatalChartData } from '@/lib/swisseph'
 import type { Language } from '@/lib/translations'
+import Select, { type StylesConfig, type SingleValue, components } from 'react-select'
+import { getData, getName } from 'country-list'
+
+// Types
+interface CountryOption {
+  value: string
+  label: string
+  flag: string
+}
+
+interface CityResult {
+  display_name: string
+  name: string
+  lat: string
+  lon: string
+  address?: {
+    city?: string
+    town?: string
+    village?: string
+    municipality?: string
+    state?: string
+    country?: string
+    country_code?: string
+  }
+}
+
+interface SelectedCity {
+  name: string
+  displayName: string
+  lat: number
+  lng: number
+  country?: string
+  region?: string
+}
 
 interface BirthFormData {
   firstName: string
@@ -25,11 +51,345 @@ interface BirthFormData {
   minute: string
   ampm: 'AM' | 'PM'
   is24Hour: boolean
-  city: string
-  country: string
+  city: SelectedCity | null
+  country: CountryOption | null
 }
 
 type ViewState = 'form' | 'loading' | 'results' | 'emailSent'
+
+// Get country flag emoji from country code
+function getCountryFlag(countryCode: string): string {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0))
+  return String.fromCodePoint(...codePoints)
+}
+
+// Get all countries with flags
+function getAllCountries(): CountryOption[] {
+  const countriesData = getData()
+  return countriesData
+    .map(country => ({
+      value: country.code,
+      label: country.name,
+      flag: getCountryFlag(country.code)
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
+// Custom styles for react-select matching the purple/gold aesthetic
+const selectStyles: StylesConfig<CountryOption, false> = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: 'rgba(45, 27, 105, 0.3)',
+    borderColor: state.isFocused ? '#C9A84C' : 'rgba(255, 255, 255, 0.1)',
+    borderWidth: '1px',
+    borderRadius: '0.5rem',
+    minHeight: '48px',
+    boxShadow: state.isFocused ? '0 0 0 2px rgba(201, 168, 76, 0.3)' : 'none',
+    '&:hover': {
+      borderColor: 'rgba(201, 168, 76, 0.5)'
+    }
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: 'rgba(15, 12, 41, 0.98)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '0.75rem',
+    overflow: 'hidden',
+    zIndex: 50
+  }),
+  menuList: (base) => ({
+    ...base,
+    padding: '8px',
+    maxHeight: '300px'
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected 
+      ? 'rgba(201, 168, 76, 0.3)' 
+      : state.isFocused 
+        ? 'rgba(45, 27, 105, 0.5)' 
+        : 'transparent',
+    color: '#F5F5DC',
+    padding: '10px 12px',
+    borderRadius: '0.5rem',
+    cursor: 'pointer',
+    '&:active': {
+      backgroundColor: 'rgba(201, 168, 76, 0.4)'
+    }
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: '#F5F5DC',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  }),
+  input: (base) => ({
+    ...base,
+    color: '#F5F5DC'
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: 'rgba(245, 245, 220, 0.5)'
+  }),
+  indicatorSeparator: () => ({
+    display: 'none'
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    color: 'rgba(245, 245, 220, 0.5)',
+    '&:hover': {
+      color: '#C9A84C'
+    }
+  }),
+  clearIndicator: (base) => ({
+    ...base,
+    color: 'rgba(245, 245, 220, 0.5)',
+    '&:hover': {
+      color: '#C9A84C'
+    }
+  }),
+  noOptionsMessage: (base) => ({
+    ...base,
+    color: 'rgba(245, 245, 220, 0.5)'
+  })
+}
+
+// Custom Option component to show flag
+function CustomOption(props: any) {
+  return (
+    <components.Option {...props}>
+      <div className="flex items-center gap-2">
+        <span className="text-lg">{props.data.flag}</span>
+        <span>{props.data.label}</span>
+      </div>
+    </components.Option>
+  )
+}
+
+// Custom SingleValue component to show flag
+function CustomSingleValue(props: any) {
+  return (
+    <components.SingleValue {...props}>
+      <div className="flex items-center gap-2">
+        <span className="text-lg">{props.data.flag}</span>
+        <span>{props.data.label}</span>
+      </div>
+    </components.SingleValue>
+  )
+}
+
+// City Autocomplete Component
+function CityAutocomplete({ 
+  value, 
+  onChange, 
+  placeholder,
+  language 
+}: { 
+  value: SelectedCity | null
+  onChange: (city: SelectedCity | null) => void
+  placeholder: string
+  language: Language
+}) {
+  const [inputValue, setInputValue] = useState('')
+  const [suggestions, setSuggestions] = useState<CityResult[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<NodeJS.Timeout>()
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Fetch suggestions from Nominatim
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([])
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=8&featuretype=city`,
+        {
+          headers: {
+            'Accept-Language': language,
+            'User-Agent': 'MeteoAstrale/1.0'
+          }
+        }
+      )
+      const data: CityResult[] = await response.json()
+      setSuggestions(data)
+      setShowSuggestions(true)
+    } catch (error) {
+      console.error('Error fetching city suggestions:', error)
+      setSuggestions([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [language])
+
+  // Debounced search
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setInputValue(newValue)
+    
+    // Clear previous selection if user is typing
+    if (value) {
+      onChange(null)
+    }
+
+    // Debounce API call
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(newValue)
+    }, 300)
+  }
+
+  // Handle city selection
+  const handleSelectCity = (city: CityResult) => {
+    const cityName = city.address?.city || 
+                     city.address?.town || 
+                     city.address?.village || 
+                     city.address?.municipality ||
+                     city.name
+
+    const selectedCity: SelectedCity = {
+      name: cityName,
+      displayName: city.display_name,
+      lat: parseFloat(city.lat),
+      lng: parseFloat(city.lon),
+      country: city.address?.country,
+      region: city.address?.state
+    }
+
+    onChange(selectedCity)
+    setInputValue(cityName)
+    setShowSuggestions(false)
+    setSuggestions([])
+  }
+
+  // Clear selection
+  const handleClear = () => {
+    onChange(null)
+    setInputValue('')
+    setSuggestions([])
+    inputRef.current?.focus()
+  }
+
+  // Get display text for suggestion
+  const getSuggestionText = (city: CityResult) => {
+    const parts: string[] = []
+    const cityName = city.address?.city || 
+                     city.address?.town || 
+                     city.address?.village || 
+                     city.address?.municipality ||
+                     city.name
+    parts.push(cityName)
+    if (city.address?.state) parts.push(city.address.state)
+    if (city.address?.country) parts.push(city.address.country)
+    return parts.join(', ')
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          type="text"
+          value={value ? value.name : inputValue}
+          onChange={handleInputChange}
+          onFocus={() => inputValue.length >= 2 && setShowSuggestions(true)}
+          placeholder={placeholder}
+          className={`h-12 bg-input border-border text-cream placeholder:text-muted-foreground focus:ring-2 focus:ring-primary pr-10 ${
+            value ? 'border-green-500/50' : ''
+          }`}
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {isLoading && (
+            <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          )}
+          {value && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X className="w-4 h-4 text-muted-foreground hover:text-cream" />
+            </button>
+          )}
+          {value ? (
+            <Check className="w-4 h-4 text-green-400" />
+          ) : (
+            <Search className="w-4 h-4 text-muted-foreground" />
+          )}
+        </div>
+      </div>
+
+      {/* Selected city info */}
+      {value && (
+        <div className="mt-2 flex items-center gap-2 text-sm text-green-400">
+          <MapPin className="w-3 h-3" />
+          <span className="truncate">{value.displayName}</span>
+        </div>
+      )}
+
+      {/* Suggestions dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full mt-2 glass rounded-xl overflow-hidden border border-white/10 shadow-xl">
+          <ul className="py-2 max-h-72 overflow-y-auto">
+            {suggestions.map((city, index) => (
+              <li key={`${city.lat}-${city.lon}-${index}`}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectCity(city)}
+                  className="w-full px-4 py-3 text-left hover:bg-violet/30 transition-colors flex items-start gap-3"
+                >
+                  <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-cream font-medium">
+                      {city.address?.city || city.address?.town || city.address?.village || city.address?.municipality || city.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {getSuggestionText(city)}
+                    </p>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* No results message */}
+      {showSuggestions && !isLoading && inputValue.length >= 2 && suggestions.length === 0 && (
+        <div className="absolute z-50 w-full mt-2 glass rounded-xl p-4 text-center text-muted-foreground border border-white/10">
+          {language === 'fr' ? 'Aucune ville trouvée' : 
+           language === 'en' ? 'No cities found' : 
+           language === 'es' ? 'No se encontraron ciudades' : 
+           language === 'jp' ? '都市が見つかりません' : 
+           'Niciun oraș găsit'}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function NatalChartPage() {
   const { t, language } = useLanguage()
@@ -38,6 +398,7 @@ export default function NatalChartPage() {
   const [birthData, setBirthData] = useState<BirthFormData | null>(null)
   const [email, setEmail] = useState('')
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false)
+  const [allCountries] = useState<CountryOption[]>(getAllCountries)
   
   const [formData, setFormData] = useState<BirthFormData>({
     firstName: '',
@@ -47,27 +408,39 @@ export default function NatalChartPage() {
     minute: '00',
     ampm: 'PM',
     is24Hour: false,
-    city: '',
-    country: 'FR',
+    city: null,
+    country: allCountries.find(c => c.value === 'FR') || null,
   })
 
-  const handleChange = useCallback((field: keyof BirthFormData, value: string | boolean) => {
+  const handleChange = useCallback((field: keyof BirthFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }, [])
 
+  const handleCountryChange = (option: SingleValue<CountryOption>) => {
+    setFormData(prev => ({ ...prev, country: option }))
+  }
+
+  const handleCityChange = (city: SelectedCity | null) => {
+    setFormData(prev => ({ ...prev, city }))
+  }
+
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate city selection
+    if (!formData.city) {
+      return
+    }
+    
     setViewState('loading')
     setBirthData(formData)
     
-    // Get coordinates for the city
-    const coords = getCityCoordinates(formData.city)
-    if (!coords) {
-      // Default to Paris if city not found
-      coords && (coords.lat = 48.8566)
+    // Use coordinates from selected city
+    const cityCoords = {
+      lat: formData.city.lat,
+      lng: formData.city.lng,
+      tz: 1 // Default timezone offset, ideally should be determined from coordinates
     }
-    
-    const cityCoords = coords || { lat: 48.8566, lng: 2.3522, tz: 1 }
     
     // Parse date and time
     const [year, month, day] = formData.date.split('-').map(Number)
@@ -228,36 +601,34 @@ export default function NatalChartPage() {
                 </button>
               </div>
               
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-3 items-center flex-wrap">
                 {/* Hour Select */}
-                <Select value={formData.hour} onValueChange={(value) => handleChange('hour', value)}>
-                  <SelectTrigger className="h-12 w-24 bg-input border-border text-cream">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass max-h-60">
-                    {hourOptions.map((hour) => (
-                      <SelectItem key={hour} value={hour}>
-                        {hour}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select 
+                  value={formData.hour} 
+                  onChange={(e) => handleChange('hour', e.target.value)}
+                  className="h-12 w-20 px-3 rounded-lg bg-input border border-border text-cream focus:ring-2 focus:ring-primary focus:outline-none"
+                >
+                  {hourOptions.map((hour) => (
+                    <option key={hour} value={hour} className="bg-navy text-cream">
+                      {hour}
+                    </option>
+                  ))}
+                </select>
                 
                 <span className="text-2xl text-cream font-light">:</span>
                 
                 {/* Minute Select */}
-                <Select value={formData.minute} onValueChange={(value) => handleChange('minute', value)}>
-                  <SelectTrigger className="h-12 w-24 bg-input border-border text-cream">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass max-h-60">
-                    {minuteOptions.map((min) => (
-                      <SelectItem key={min} value={min}>
-                        {min}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select 
+                  value={formData.minute} 
+                  onChange={(e) => handleChange('minute', e.target.value)}
+                  className="h-12 w-20 px-3 rounded-lg bg-input border border-border text-cream focus:ring-2 focus:ring-primary focus:outline-none"
+                >
+                  {minuteOptions.map((min) => (
+                    <option key={min} value={min} className="bg-navy text-cream">
+                      {min}
+                    </option>
+                  ))}
+                </select>
                 
                 {/* AM/PM Toggle (only for 12h format) */}
                 {!formData.is24Hour && (
@@ -291,50 +662,69 @@ export default function NatalChartPage() {
               </div>
             </div>
 
-            {/* City and Country */}
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="city" className="text-cream font-medium">
-                  {t.natalChart.form.city}
-                </Label>
-                <Input
-                  id="city"
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  required
-                  className="h-12 bg-input border-border text-cream placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-                  placeholder="Paris"
-                />
-              </div>
+            {/* City with Autocomplete */}
+            <div className="space-y-2">
+              <Label className="text-cream font-medium">
+                {t.natalChart.form.city}
+              </Label>
+              <CityAutocomplete
+                value={formData.city}
+                onChange={handleCityChange}
+                placeholder={language === 'fr' ? 'Rechercher une ville...' : 
+                             language === 'en' ? 'Search for a city...' : 
+                             language === 'es' ? 'Buscar una ciudad...' : 
+                             language === 'jp' ? '都市を検索...' : 
+                             'Caută un oraș...'}
+                language={language}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="country" className="text-cream font-medium">
-                  {t.natalChart.form.country}
-                </Label>
-                <Select value={formData.country} onValueChange={(value) => handleChange('country', value)}>
-                  <SelectTrigger className="h-12 bg-input border-border text-cream">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass max-h-60">
-                    {countries.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        {country.name[language as Language]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Country with Searchable Select */}
+            <div className="space-y-2">
+              <Label className="text-cream font-medium">
+                {t.natalChart.form.country}
+              </Label>
+              <Select
+                value={formData.country}
+                onChange={handleCountryChange}
+                options={allCountries}
+                styles={selectStyles}
+                components={{ Option: CustomOption, SingleValue: CustomSingleValue }}
+                placeholder={language === 'fr' ? 'Sélectionner un pays...' : 
+                             language === 'en' ? 'Select a country...' : 
+                             language === 'es' ? 'Seleccionar un país...' : 
+                             language === 'jp' ? '国を選択...' : 
+                             'Selectați o țară...'}
+                noOptionsMessage={() => language === 'fr' ? 'Aucun pays trouvé' : 
+                                        language === 'en' ? 'No country found' : 
+                                        language === 'es' ? 'No se encontró ningún país' : 
+                                        language === 'jp' ? '国が見つかりません' : 
+                                        'Nicio țară găsită'}
+                isSearchable
+                isClearable
+                classNamePrefix="react-select"
+              />
             </div>
 
             {/* Submit Button */}
             <Button 
               type="submit" 
               className="btn-gold w-full h-14 text-lg mt-4"
+              disabled={!formData.city}
             >
               <Sparkles className="mr-2 h-5 w-5" />
               {t.natalChart.form.submit}
             </Button>
+            
+            {!formData.city && (
+              <p className="text-center text-sm text-muted-foreground">
+                {language === 'fr' ? 'Veuillez sélectionner une ville dans la liste' : 
+                 language === 'en' ? 'Please select a city from the list' : 
+                 language === 'es' ? 'Por favor seleccione una ciudad de la lista' : 
+                 language === 'jp' ? 'リストから都市を選択してください' : 
+                 'Vă rugăm să selectați un oraș din listă'}
+              </p>
+            )}
           </form>
         </div>
       )}
@@ -430,8 +820,9 @@ export default function NatalChartPage() {
                 : `${birthData.hour}:${birthData.minute} ${birthData.ampm}`
               }
             </p>
-            <p className="text-muted-foreground">
-              {birthData.city}, {countries.find(c => c.code === birthData.country)?.name[language as Language]}
+            <p className="text-muted-foreground flex items-center justify-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              {birthData.city?.name}{birthData.city?.country ? `, ${birthData.city.country}` : ''}
             </p>
           </div>
 
