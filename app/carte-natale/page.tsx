@@ -83,10 +83,10 @@ export default function CarteNatale() {
     setCitySearching(true)
     try {
       const country = form.birthCountry
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=${country.toLowerCase()}&limit=6&format=json&addressdetails=1`
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&limit=8&format=json&addressdetails=1&featuretype=city`
       const res = await fetch(url, {headers:{'Accept-Language':'fr'}})
       const data = await res.json()
-      const cities = data.filter((d:any) => d.type === 'city' || d.type === 'town' || d.type === 'village' || d.class === 'place')
+      const cities = data
       setCitySuggestions(cities.slice(0,6))
       setShowSuggestions(true)
     } catch { setCitySuggestions([]) }
