@@ -164,7 +164,7 @@ export default function NatalChartPage() {
                 return (
                   <div key={pos.planet} className="glass rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <span className="planet-symbol text-2xl">{{t(language, {t(language, planet?.symbol)})}}</span>
+                      <span className="planet-symbol text-2xl">{t(language, planet?.symbol)}</span>
                       <div>
                         <p className="font-medium text-cream">{{t(language, planet.name)}}</p>
                         <p className="text-sm text-muted-foreground">
@@ -191,7 +191,7 @@ export default function NatalChartPage() {
                     return (
                       <div key={key} className="glass rounded-xl p-6">
                         <div className="flex items-center gap-3 mb-3">
-                          <span className="planet-symbol text-xl">{{t(language, planet?.symbol)}}</span>
+                          <span className="planet-symbol text-xl">{{t(language, planet?.symbol)}</span>
                           <h4 className="font-serif text-lg text-cream">{{t(language, planet?.name)}}</h4>
                         </div>
                         <p className="text-muted-foreground leading-relaxed">
@@ -209,7 +209,7 @@ export default function NatalChartPage() {
                   return (
                     <div key={key} className="glass rounded-xl p-6">
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="planet-symbol text-xl">{{t(language, planet?.symbol)}}</span>
+                        <span className="planet-symbol text-xl">{{t(language, planet?.symbol)}</span>
                         <h4 className="font-serif text-lg text-cream">{{t(language, planet?.name)}}</h4>
                       </div>
                       <p className="text-muted-foreground leading-relaxed">
