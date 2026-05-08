@@ -166,9 +166,9 @@ export default function NatalChartPage() {
                     <div className="flex items-center gap-3">
                       <span className="planet-symbol text-2xl">{t(language, planet?.symbol)}</span>
                       <div>
-                        <p className="font-medium text-cream">{{t(language, planet.name)}}</p>
+                        <p className="font-medium text-cream">{{t(language, planet?.name)}}</p>
                         <p className="text-sm text-muted-foreground">
-                          {{t(language, sign.symbol)}} {pos.degree}°
+                          {{t(language, sign?.symbol)}} {pos.degree}°
                         </p>
                       </div>
                     </div>
