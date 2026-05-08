@@ -18,15 +18,15 @@ const L: Record<Language, Record<string,string>> = {
 function tr(lang: Language, k?: string) { return k ? (L[lang]?.[k] || k) : '' }
 
 const UI: Record<Language,Record<string,string>> = {
-  fr:{title:'Votre Carte Natale',sub:'Découvrez votre thème astral — résultats instantanés',name:'Prénom',date:'Date de naissance',time:'Heure de naissance',country:'Pays',city:'Ville de naissance',email:'Votre email (gratuit ✨)',emailNote:'Recevez votre analyse par email — 100% gratuit',btn:'Calculer ma carte natale gratuitement',loading:'Calcul en cours...',planets:'Planètes',houses:'Maisons',sign:'Signe',pos:'Degré',house:'Maison',back:'Nouvelle recherche',searching:'Recherche...'},
-  en:{title:'Your Birth Chart',sub:'Discover your astral theme — instant results',name:'First name',date:'Birth date',time:'Birth time',country:'Country',city:'Birth city',email:'Your email (free ✨)',emailNote:'Receive your analysis by email — 100% free',btn:'Calculate my birth chart for free',loading:'Calculating...',planets:'Planets',houses:'Houses',sign:'Sign',pos:'Degree',house:'House',back:'New search',searching:'Searching...'},
-  es:{title:'Tu Carta Natal',sub:'Descubre tu tema astral — resultados instantáneos',name:'Nombre',date:'Fecha de nacimiento',time:'Hora de nacimiento',country:'País',city:'Ciudad de nacimiento',email:'Tu email (gratis ✨)',emailNote:'Recibe tu análisis por email — 100% gratis',btn:'Calcular mi carta natal gratis',loading:'Calculando...',planets:'Planetas',houses:'Casas',sign:'Signo',pos:'Grado',house:'Casa',back:'Nueva búsqueda',searching:'Buscando...'},
-  jp:{title:'出生ホロスコープ',sub:'星座テーマを発見 — 即時結果',name:'お名前',date:'生年月日',time:'出生時刻',country:'国',city:'出生都市',email:'メール (無料 ✨)',emailNote:'無料で分析をメールで受け取る',btn:'無料でチャートを計算',loading:'計算中...',planets:'惑星',houses:'ハウス',sign:'サイン',pos:'度',house:'室',back:'新しい検索',searching:'検索中...'},
-  ro:{title:'Harta Natală',sub:'Descoperă-ți tema astrală — rezultate instantanee',name:'Prenume',date:'Data nașterii',time:'Ora nașterii',country:'Țară',city:'Orașul nașterii',email:'Email-ul tău (gratuit ✨)',emailNote:'Primește analiza pe email — 100% gratuit',btn:'Calculează harta natală gratuit',loading:'Se calculează...',planets:'Planete',houses:'Case',sign:'Semn',pos:'Grad',house:'Casă',back:'Căutare nouă',searching:'Se caută...'},
+  fr:{title:'Votre Carte Natale',sub:'Découvrez votre thème astral — résultats instantanés',name:'Prénom',date:'Date de naissance',time:'Heure de naissance',country:'Pays',city:'Ville de naissance',email:'Votre email',emailNote:'Recevez votre analyse par email — 100% gratuit',btn:'Calculer ma carte natale gratuitement',loading:'Calcul en cours...',planets:'Planètes',houses:'Maisons',sign:'Signe',pos:'Degré',house:'Maison',back:'Nouvelle recherche',searching:'Recherche...'},
+  en:{title:'Your Birth Chart',sub:'Discover your astral theme — instant results',name:'First name',date:'Birth date',time:'Birth time',country:'Country',city:'Birth city',email:'Your email',emailNote:'Receive your analysis by email — 100% free',btn:'Calculate my birth chart for free',loading:'Calculating...',planets:'Planets',houses:'Houses',sign:'Sign',pos:'Degree',house:'House',back:'New search',searching:'Searching...'},
+  es:{title:'Tu Carta Natal',sub:'Descubre tu tema astral — resultados instantáneos',name:'Nombre',date:'Fecha de nacimiento',time:'Hora de nacimiento',country:'País',city:'Ciudad de nacimiento',email:'Tu email',emailNote:'Recibe tu análisis por email — 100% gratis',btn:'Calcular mi carta natal gratis',loading:'Calculando...',planets:'Planetas',houses:'Casas',sign:'Signo',pos:'Grado',house:'Casa',back:'Nueva búsqueda',searching:'Buscando...'},
+  jp:{title:'出生ホロスコープ',sub:'星座テーマを発見 — 即時結果',name:'お名前',date:'生年月日',time:'出生時刻',country:'国',city:'出生都市',email:'メールアドレス',emailNote:'無料で分析をメールで受け取る',btn:'無料でチャートを計算',loading:'計算中...',planets:'惑星',houses:'ハウス',sign:'サイン',pos:'度',house:'室',back:'新しい検索',searching:'検索中...'},
+  ro:{title:'Harta Natală',sub:'Descoperă-ți tema astrală — rezultate instantanee',name:'Prenume',date:'Data nașterii',time:'Ora nașterii',country:'Țară',city:'Orașul nașterii',email:'Email-ul tău',emailNote:'Primește analiza pe email — 100% gratuit',btn:'Calculează harta natală gratuit',loading:'Se calculează...',planets:'Planete',houses:'Case',sign:'Semn',pos:'Grad',house:'Casă',back:'Căutare nouă',searching:'Se caută...'},
 }
 export default function CarteNatale() {
   const [lang, setLang] = useState<Language>('fr')
-  const [form, setForm] = useState({name:'',date:'',time:'',country:'FR',city:'',email:'',lat:'',lon:''})
+  const [form, setForm] = useState({name:'',birthDate:'',birthTime:'',birthCountry:'FR',birthCity:'',email:'',lat:'',lon:''})
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -104,23 +104,23 @@ export default function CarteNatale() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-purple-300 text-sm mb-1">{u.date}</label>
-                <input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
+                <input type="date" value={form.birthDate} onChange={e=>setForm({...form,date:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
               </div>
               <div>
                 <label className="block text-purple-300 text-sm mb-1">{u.time}</label>
-                <input type="time" value={form.time} onChange={e=>setForm({...form,time:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
+                <input type="time" value={form.birthTime} onChange={e=>setForm({...form,time:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
               </div>
             </div>
             <div>
               <label className="block text-purple-300 text-sm mb-1">{u.country}</label>
-              <select value={form.country} onChange={e=>setForm({...form,country:e.target.value,city:'',lat:'',lon:''})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white">
+              <select value={form.birthCountry} onChange={e=>setForm({...form,country:e.target.value,city:'',lat:'',lon:''})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white">
                 {COUNTRIES.map(c=>{const cn=c.name;const cc=c.code;return(<option key={cc} value={cc}>{cn}</option>)})}
               </select>
             </div>
             <div className="relative">
               <label className="block text-purple-300 text-sm mb-1">{u.city}</label>
               <div className="relative">
-                <input type="text" value={form.city} onChange={e=>onCity(e.target.value)} onFocus={()=>form.city.length>1&&setShowSug(true)} autoComplete="off" placeholder="Ex: Paris, Bucarest, Tokyo..." className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white pr-8" required />
+                <input type="text" value={form.birthCity} onChange={e=>onCity(e.target.value)} onFocus={()=>form.birthCity.length>1&&setShowSug(true)} autoComplete="off" placeholder="Ex: Paris, Bucarest, Tokyo..." className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white pr-8" required />
                 {searching && <span className="absolute right-3 top-2.5 text-purple-400 text-xs">{u.searching}</span>}
                 {form.lat && <span className="absolute right-3 top-2.5 text-green-400">✔</span>}
               </div>
@@ -144,7 +144,7 @@ export default function CarteNatale() {
           <div className="space-y-6">
             <div className="bg-purple-900/20 rounded-2xl p-6 border border-purple-700/30">
               <h2 className="text-xl font-bold text-yellow-400 mb-1">☉ {u.planets}</h2>
-              <p className="text-purple-400 text-sm mb-4">{form.name} — {form.date} — {form.city}</p>
+              <p className="text-purple-400 text-sm mb-4">{form.name} — {form.birthDate} — {form.birthCity}</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
