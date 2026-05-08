@@ -1,3 +1,52 @@
+const translateContent: Record<Language, Record<string, string>> = {
+  fr: {
+    'Sun': 'Soleil', 'Moon': 'Lune', 'Mercury': 'Mercure', 'Venus': 'Venus',
+    'Mars': 'Mars', 'Jupiter': 'Jupiter', 'Saturn': 'Saturne', 'Uranus': 'Uranus',
+    'Neptune': 'Neptune', 'Pluto': 'Pluton',
+    'Aries': 'Bélier', 'Taurus': 'Taureau', 'Gemini': 'Gémeaux', 'Cancer': 'Cancer',
+    'Leo': 'Lion', 'Virgo': 'Vierge', 'Libra': 'Balance', 'Scorpio': 'Scorpion',
+    'Sagittarius': 'Sagittaire', 'Capricorn': 'Capricorne', 'Aquarius': 'Verseau',
+    'Pisces': 'Poissons', 'House': 'Maison'
+  },
+  en: {
+    'Sun': 'Sun', 'Moon': 'Moon', 'Mercury': 'Mercury', 'Venus': 'Venus',
+    'Mars': 'Mars', 'Jupiter': 'Jupiter', 'Saturn': 'Saturn', 'Uranus': 'Uranus',
+    'Neptune': 'Neptune', 'Pluto': 'Pluto',
+    'Aries': 'Aries', 'Taurus': 'Taurus', 'Gemini': 'Gemini', 'Cancer': 'Cancer',
+    'Leo': 'Leo', 'Virgo': 'Virgo', 'Libra': 'Libra', 'Scorpio': 'Scorpio',
+    'Sagittarius': 'Sagittarius', 'Capricorn': 'Capricorn', 'Aquarius': 'Aquarius',
+    'Pisces': 'Pisces', 'House': 'House'
+  },
+  es: {
+    'Sun': 'Sol', 'Moon': 'Luna', 'Mercury': 'Mercurio', 'Venus': 'Venus',
+    'Mars': 'Marte', 'Jupiter': 'Jupiter', 'Saturn': 'Saturno', 'Uranus': 'Urano',
+    'Neptune': 'Neptuno', 'Pluto': 'Plutón',
+    'Aries': 'Aries', 'Taurus': 'Tauro', 'Gemini': 'Geminis', 'Cancer': 'Cáncer',
+    'Leo': 'Leo', 'Virgo': 'Virgo', 'Libra': 'Libra', 'Scorpio': 'Escorpio',
+    'Sagittarius': 'Sagitario', 'Capricorn': 'Capricornio', 'Aquarius': 'Acuario',
+    'Pisces': 'Piscis', 'House': 'Casa'
+  },
+  jp: {
+    'Sun': '太陽', 'Moon': '月', 'Mercury': '水星', 'Venus': '金星',
+    'Mars': '火星', 'Jupiter': '木星', 'Saturn': '土星', 'Uranus': '天王星',
+    'Neptune': '海王星', 'Pluto': '冥王星',
+    'Aries': '牡羊座', 'Taurus': '牡牛座', 'Gemini': '双子座', 'Cancer': '蟹座',
+    'Leo': '獅子座', 'Virgo': '乙女座', 'Libra': '天秤座', 'Scorpio': '蠍座',
+    'Sagittarius': '射手座', 'Capricorn': '山羊座', 'Aquarius': '水瓶座',
+    'Pisces': '魚座', 'House': 'ハウス'
+  },
+  ro: {
+    'Sun': 'Soare', 'Moon': 'Lună', 'Mercury': 'Mercur', 'Venus': 'Venus',
+    'Mars': 'Marte', 'Jupiter': 'Jupiter', 'Saturn': 'Saturn', 'Uranus': 'Uranus',
+    'Neptune': 'Neptun', 'Pluto': 'Pluton',
+    'Aries': 'Berbec', 'Taurus': 'Taur', 'Gemini': 'Gemeni', 'Cancer': 'Rac',
+    'Leo': 'Leu', 'Virgo': 'Fecioara', 'Libra': 'Balanta', 'Scorpio': 'Scorpion',
+    'Sagittarius': 'Sagetator', 'Capricorn': 'Capricorn', 'Aquarius': 'Varsator',
+    'Pisces': 'Pesti', 'House': 'Casa'
+  }
+};
+
+const t = (lang: Language, key: string) => translateContent[lang][key] || key;
 'use client'
 
 import { useState } from 'react'
@@ -115,11 +164,11 @@ export default function NatalChartPage() {
                 return (
                   <div key={pos.planet} className="glass rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <span className="planet-symbol text-2xl">{planet.symbol}</span>
+                      <span className="planet-symbol text-2xl">{{t(language, {t(language, planet?.symbol)})}}</span>
                       <div>
-                        <p className="font-medium text-cream">{planet.name}</p>
+                        <p className="font-medium text-cream">{{t(language, planet.name)}}</p>
                         <p className="text-sm text-muted-foreground">
-                          {sign.symbol} {pos.degree}°
+                          {{t(language, sign.symbol)}} {pos.degree}°
                         </p>
                       </div>
                     </div>
@@ -142,8 +191,8 @@ export default function NatalChartPage() {
                     return (
                       <div key={key} className="glass rounded-xl p-6">
                         <div className="flex items-center gap-3 mb-3">
-                          <span className="planet-symbol text-xl">{planet?.symbol}</span>
-                          <h4 className="font-serif text-lg text-cream">{planet?.name}</h4>
+                          <span className="planet-symbol text-xl">{{t(language, planet?.symbol)}}</span>
+                          <h4 className="font-serif text-lg text-cream">{{t(language, planet?.name)}}</h4>
                         </div>
                         <p className="text-muted-foreground leading-relaxed">
                           {texts[language as Language]}
@@ -160,8 +209,8 @@ export default function NatalChartPage() {
                   return (
                     <div key={key} className="glass rounded-xl p-6">
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="planet-symbol text-xl">{planet?.symbol}</span>
-                        <h4 className="font-serif text-lg text-cream">{planet?.name}</h4>
+                        <span className="planet-symbol text-xl">{{t(language, planet?.symbol)}}</span>
+                        <h4 className="font-serif text-lg text-cream">{{t(language, planet?.name)}}</h4>
                       </div>
                       <p className="text-muted-foreground leading-relaxed">
                         {texts[language as Language]}
