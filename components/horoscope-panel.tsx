@@ -1,7 +1,8 @@
 'use client'
 
 import { useLanguage } from '@/contexts/language-context'
-import { mockHoroscopes, type ZodiacSignId } from '@/lib/astrology-data'
+import { horoscopes } from '@/app/data/horoscopes'
+import type { ZodiacSignId } from '@/lib/astrology-data'
 import type { Language } from '@/lib/translations'
 import { Heart, Briefcase, Activity, Wallet } from 'lucide-react'
 
@@ -25,7 +26,7 @@ const domainColors = {
 
 export function HoroscopePanel({ signId }: HoroscopePanelProps) {
   const { language, t } = useLanguage()
-  const horoscope = mockHoroscopes[signId]
+  const horoscope = horoscopes[signId]
 
   if (!horoscope) return null
 
