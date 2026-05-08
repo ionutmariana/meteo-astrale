@@ -49,14 +49,14 @@ export default function CarteNatale() {
   }
 
   function onCity(v: string) {
-    setForm({...form,city:v,lat:'',lon:''})
+    setForm({...form,birthCity:v,lat:'',lon:''})
     clearTimeout(timer.current)
     timer.current = setTimeout(()=>searchCity(v),400)
   }
 
   function pickCity(c: any) {
     const name = c.address?.city||c.address?.town||c.address?.village||c.display_name.split(',')[0]
-    setForm({...form,city:name,lat:c.lat,lon:c.lon})
+    setForm({...form,birthCity:name,lat:c.lat,lon:c.lon})
     setShowSug(false)
     setSuggestions([])
   }
@@ -113,7 +113,7 @@ export default function CarteNatale() {
             </div>
             <div>
               <label className="block text-purple-300 text-sm mb-1">{u.country}</label>
-              <select value={form.birthCountry} onChange={e=>setForm({...form,country:e.target.value,city:'',lat:'',lon:''})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white">
+              <select value={form.birthCountry} onChange={e=>setForm({...form,birthCountry:e.target.value,birthCity:'',lat:'',lon:''})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white">
                 {COUNTRIES.map(c=>{const cn=c.name;const cc=c.code;return(<option key={cc} value={cc}>{cn}</option>)})}
               </select>
             </div>
