@@ -104,11 +104,11 @@ export default function CarteNatale() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-purple-300 text-sm mb-1">{u.date}</label>
-                <input type="date" value={form.birthDate} onChange={e=>setForm({...form,date:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
+                <input type="date" value={form.birthDate} onChange={e=>setForm({...form,birthDate:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
               </div>
               <div>
                 <label className="block text-purple-300 text-sm mb-1">{u.time}</label>
-                <input type="time" value={form.birthTime} onChange={e=>setForm({...form,time:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
+                <input type="time" value={form.birthTime} onChange={e=>setForm({...form,birthTime:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
               </div>
             </div>
             <div>
