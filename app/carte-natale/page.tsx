@@ -9,20 +9,20 @@ const COUNTRIES = [
 ]
 
 const L: Record<Language, Record<string,string>> = {
-  fr:{Sun:'Soleil',Moon:'Lune',Mercury:'Mercure',Venus:'Vénus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturne',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluton',Aries:'Bélier',Taurus:'Taureau',Gemini:'Gémeaux',Cancer:'Cancer',Leo:'Lion',Virgo:'Vierge',Libra:'Balance',Scorpio:'Scorpion',Sagittarius:'Sagittaire',Capricorn:'Capricorne',Aquarius:'Verseau',Pisces:'Poissons',House:'Maison',Ascendant:'Ascendant'},
-  en:{Sun:'Sun',Moon:'Moon',Mercury:'Mercury',Venus:'Venus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluto',Aries:'Aries',Taurus:'Taurus',Gemini:'Gemini',Cancer:'Cancer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Scorpio',Sagittarius:'Sagittarius',Capricorn:'Capricorn',Aquarius:'Aquarius',Pisces:'Pisces',House:'House',Ascendant:'Ascendant'},
-  es:{Sun:'Sol',Moon:'Luna',Mercury:'Mercurio',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Neptuno',Pluto:'Plutón',Aries:'Aries',Taurus:'Tauro',Gemini:'Géminis',Cancer:'Cáncer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Escorpio',Sagittarius:'Sagitario',Capricorn:'Capricornio',Aquarius:'Acuario',Pisces:'Piscis',House:'Casa',Ascendant:'Ascendente'},
-  jp:{Sun:'太陽',Moon:'月',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星',Aries:'牡羊座',Taurus:'牡牛座',Gemini:'双子座',Cancer:'蟹座',Leo:'獅子座',Virgo:'乙女座',Libra:'天秤座',Scorpio:'蠍座',Sagittarius:'射手座',Capricorn:'山羊座',Aquarius:'水瓶座',Pisces:'魚座',House:'室',Ascendant:'アセンダント'},
-  ro:{Sun:'Soare',Moon:'Lună',Mercury:'Mercur',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptun',Pluto:'Pluto',Aries:'Berbec',Taurus:'Taur',Gemini:'Gemeni',Cancer:'Rac',Leo:'Leu',Virgo:'Fecioară',Libra:'Balanță',Scorpio:'Scorpion',Sagittarius:'Săgetător',Capricorn:'Capricorn',Aquarius:'Vărsător',Pisces:'Pești',House:'Casă',Ascendant:'Ascendent'},
+  fr:{Sun:'Soleil',Moon:'Lune',Mercury:'Mercure',Venus:'Vénus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturne',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluton',Aries:'Bélier',Taurus:'Taureau',Gemini:'Gémeaux',Cancer:'Cancer',Leo:'Lion',Virgo:'Vierge',Libra:'Balance',Scorpio:'Scorpion',Sagittarius:'Sagittaire',Capricorn:'Capricorne',Aquarius:'Verseau',Pisces:'Poissons',House:'Maison',Ascendant:'Ascendant',MC:'Milieu du Ciel (MC)'},
+  en:{Sun:'Sun',Moon:'Moon',Mercury:'Mercury',Venus:'Venus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluto',Aries:'Aries',Taurus:'Taurus',Gemini:'Gemini',Cancer:'Cancer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Scorpio',Sagittarius:'Sagittarius',Capricorn:'Capricorn',Aquarius:'Aquarius',Pisces:'Pisces',House:'House',Ascendant:'Ascendant',MC:'Midheaven (MC)'},
+  es:{Sun:'Sol',Moon:'Luna',Mercury:'Mercurio',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Neptuno',Pluto:'Plutón',Aries:'Aries',Taurus:'Tauro',Gemini:'Géminis',Cancer:'Cáncer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Escorpio',Sagittarius:'Sagitario',Capricorn:'Capricornio',Aquarius:'Acuario',Pisces:'Piscis',House:'Casa',Ascendant:'Ascendente',MC:'Medio Cielo (MC)'},
+  jp:{Sun:'太陽',Moon:'月',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星',Aries:'牡羊座',Taurus:'牡牛座',Gemini:'双子座',Cancer:'蟹座',Leo:'獅子座',Virgo:'乙女座',Libra:'天秤座',Scorpio:'蠍座',Sagittarius:'射手座',Capricorn:'山羊座',Aquarius:'水瓶座',Pisces:'魚座',House:'室',Ascendant:'アセンダント',MC:'天頂 (MC)'},
+  ro:{Sun:'Soare',Moon:'Lună',Mercury:'Mercur',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptun',Pluto:'Pluto',Aries:'Berbec',Taurus:'Taur',Gemini:'Gemeni',Cancer:'Rac',Leo:'Leu',Virgo:'Fecioară',Libra:'Balanță',Scorpio:'Scorpion',Sagittarius:'Săgetător',Capricorn:'Capricorn',Aquarius:'Vărsător',Pisces:'Pești',House:'Casă',Ascendant:'Ascendent',MC:'Mijlocul Cerului (MC)'},
 }
 function tr(lang: Language, k?: string) { return k ? (L[lang]?.[k] || k) : '' }
 
 const UI: Record<Language,Record<string,string>> = {
-  fr:{title:'Votre Carte Natale',sub:'Découvrez votre thème astral — résultats instantanés',name:'Prénom',date:'Date de naissance',time:'Heure de naissance',country:'Pays',city:'Ville de naissance',email:'Votre email',emailNote:'Recevez votre analyse par email — 100% gratuit',btn:'Calculer ma carte natale gratuitement',loading:'Calcul en cours...',planets:'Planètes',houses:'Maisons',sign:'Signe',pos:'Degré',house:'Maison',back:'Nouvelle recherche',searching:'Recherche...',ascTitle:'Votre Ascendant'},
-  en:{title:'Your Birth Chart',sub:'Discover your astral theme — instant results',name:'First name',date:'Birth date',time:'Birth time',country:'Country',city:'Birth city',email:'Your email',emailNote:'Receive your analysis by email — 100% free',btn:'Calculate my birth chart for free',loading:'Calculating...',planets:'Planets',houses:'Houses',sign:'Sign',pos:'Degree',house:'House',back:'New search',searching:'Searching...',ascTitle:'Your Ascendant'},
-  es:{title:'Tu Carta Natal',sub:'Descubre tu tema astral — resultados instantáneos',name:'Nombre',date:'Fecha de nacimiento',time:'Hora de nacimiento',country:'País',city:'Ciudad de nacimiento',email:'Tu email',emailNote:'Recibe tu análisis por email — 100% gratis',btn:'Calcular mi carta natal gratis',loading:'Calculando...',planets:'Planetas',houses:'Casas',sign:'Signo',pos:'Grado',house:'Casa',back:'Nueva búsqueda',searching:'Buscando...',ascTitle:'Tu Ascendente'},
-  jp:{title:'出生ホロスコープ',sub:'星座テーマを発見 — 即時結果',name:'お名前',date:'生年月日',time:'出生時刻',country:'国',city:'出生都市',email:'メールアドレス',emailNote:'無料で分析をメールで受け取る',btn:'無料でチャートを計算',loading:'計算中...',planets:'惑星',houses:'ハウス',sign:'サイン',pos:'度',house:'室',back:'新しい検索',searching:'検索中...',ascTitle:'アセンダント'},
-  ro:{title:'Harta Natală',sub:'Descoperă-ți tema astrală — rezultate instantanee',name:'Prenume',date:'Data nașterii',time:'Ora nașterii',country:'Țară',city:'Orașul nașterii',email:'Email-ul tău',emailNote:'Primește analiza pe email — 100% gratuit',btn:'Calculează harta natală gratuit',loading:'Se calculează...',planets:'Planete',houses:'Case',sign:'Semn',pos:'Grad',house:'Casă',back:'Căutare nouă',searching:'Se caută...',ascTitle:'Ascendentul Tău'},
+  fr:{title:'Votre Carte Natale',sub:'Découvrez votre thème astral — résultats instantanés',name:'Prénom',date:'Date de naissance',time:'Heure de naissance',country:'Pays',city:'Ville de naissance',email:'Votre email',emailNote:'Recevez votre analyse par email — 100% gratuit',btn:'Calculer ma carte natale gratuitement',loading:'Calcul en cours...',planets:'Positions des Planètes',houses:'Maisons',sign:'Signe',pos:'Position',house:'Maison',back:'Nouvelle recherche',searching:'Recherche...',ascTitle:'Ascendant',mcTitle:'Milieu du Ciel (MC)'},
+  en:{title:'Your Birth Chart',sub:'Discover your astral theme — instant results',name:'First name',date:'Birth date',time:'Birth time',country:'Country',city:'Birth city',email:'Your email',emailNote:'Receive your analysis by email — 100% free',btn:'Calculate my birth chart for free',loading:'Calculating...',planets:'Planetary Positions',houses:'Houses',sign:'Sign',pos:'Position',house:'House',back:'New search',searching:'Searching...',ascTitle:'Ascendant',mcTitle:'Midheaven (MC)'},
+  es:{title:'Tu Carta Natal',sub:'Descubre tu tema astral — resultados instantáneos',name:'Nombre',date:'Fecha de nacimiento',time:'Hora de nacimiento',country:'País',city:'Ciudad de nacimiento',email:'Tu email',emailNote:'Recibe tu análisis por email — 100% gratis',btn:'Calcular mi carta natal gratis',loading:'Calculando...',planets:'Posiciones Planetarias',houses:'Casas',sign:'Signo',pos:'Posición',house:'Casa',back:'Nueva búsqueda',searching:'Buscando...',ascTitle:'Ascendente',mcTitle:'Medio Cielo (MC)'},
+  jp:{title:'出生ホロスコープ',sub:'星座テーマを発見 — 即時結果',name:'お名前',date:'生年月日',time:'出生時刻',country:'国',city:'出生都市',email:'メールアドレス',emailNote:'無料で分析をメールで受け取る',btn:'無料でチャートを計算',loading:'計算中...',planets:'惑星の位置',houses:'ハウス',sign:'サイン',pos:'位置',house:'室',back:'新しい検索',searching:'検索中...',ascTitle:'アセンダント',mcTitle:'天頂 (MC)'},
+  ro:{title:'Harta Natală',sub:'Descoperă-ți tema astrală — rezultate instantanee',name:'Prenume',date:'Data nașterii',time:'Ora nașterii',country:'Țară',city:'Orașul nașterii',email:'Email-ul tău',emailNote:'Primește analiza pe email — 100% gratuit',btn:'Calculează harta natală gratuit',loading:'Se calculează...',planets:'Pozițiile Planetelor',houses:'Case',sign:'Semn',pos:'Poziție',house:'Casă',back:'Căutare nouă',searching:'Se caută...',ascTitle:'Ascendent',mcTitle:'Mijlocul Cerului (MC)'},
 }
 
 export default function CarteNatale() {
@@ -81,138 +81,132 @@ export default function CarteNatale() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0015] via-[#1a0030] to-[#0a0015] text-white">
-      <nav className="border-b border-purple-800/30 p-4 flex justify-between items-center backdrop-blur">
-        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">✨ Météo Astrale</Link>
-        <select value={lang} onChange={e=>setLang(e.target.value as Language)} className="bg-purple-900/50 text-white border border-purple-700 rounded px-2 py-1 text-sm">
+    <div className="min-h-screen bg-[#05010d] text-white selection:bg-purple-500/30">
+      <nav className="border-b border-white/5 p-4 flex justify-between items-center backdrop-blur-xl sticky top-0 z-50">
+        <Link href="/" className="text-xl font-medium tracking-tighter hover:opacity-80 transition flex items-center gap-2">
+          <span className="text-amber-400 text-2xl">✧</span> Meteo Astrale
+        </Link>
+        <select value={lang} onChange={e=>setLang(e.target.value as Language)} className="bg-white/5 text-white border border-white/10 rounded-full px-4 py-1 text-xs focus:ring-1 ring-purple-500 outline-none transition">
           <option value="fr">🇫🇷 FR</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option><option value="jp">🇯🇵 JP</option><option value="ro">🇷🇴 RO</option>
         </select>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">♈♉♊♋♌♍♎♏♐♑♒♓</div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent mb-2">{u.title}</h1>
-          <p className="text-purple-300">{u.sub}</p>
-        </div>
+      <div className="max-w-3xl mx-auto px-6 py-16">
+        {!result && (
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-serif mb-4 tracking-tight">{u.title}</h1>
+            <p className="text-purple-300/60 font-light italic">{u.sub}</p>
+          </div>
+        )}
 
         {!result ? (
-          <form onSubmit={handleSubmit} className="bg-purple-900/20 rounded-2xl p-6 space-y-4 border border-purple-700/30">
-            <div>
-              <label className="block text-purple-300 text-sm mb-1">{u.name}</label>
-              <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-purple-300 text-sm mb-1">{u.date}</label>
-                <input type="date" value={form.birthDate} onChange={e=>setForm({...form,birthDate:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
+          <form onSubmit={handleSubmit} className="bg-white/[0.02] backdrop-blur-md rounded-3xl p-8 space-y-6 border border-white/5 shadow-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-white/40 ml-1">{u.name}</label>
+                <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-purple-500 transition outline-none" required />
               </div>
-              <div>
-                <label className="block text-purple-300 text-sm mb-1">{u.time}</label>
-                <input type="time" value={form.birthTime} onChange={e=>setForm({...form,birthTime:e.target.value})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" required />
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-white/40 ml-1">{u.email}</label>
+                <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-purple-500 transition outline-none" placeholder="Oubliez rien..." />
               </div>
             </div>
-            <div>
-              <label className="block text-purple-300 text-sm mb-1">{u.country}</label>
-              <select value={form.birthCountry} onChange={e=>setForm({...form,birthCountry:e.target.value,birthCity:'',lat:'',lon:''})} className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white">
-                {COUNTRIES.map(c=>{const cn=c.name;const cc=c.code;return(<option key={cc} value={cc}>{cn}</option>)})}
-              </select>
-            </div>
-            <div className="relative">
-              <label className="block text-purple-300 text-sm mb-1">{u.city}</label>
-              <div className="relative">
-                <input type="text" value={form.birthCity} onChange={e=>onCity(e.target.value)} onFocus={()=>form.birthCity.length>1&&setShowSug(true)} autoComplete="off" placeholder="Ex: Paris, Bucarest, Tokyo..." className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white pr-8" required />
-                {searching && <span className="absolute right-3 top-2.5 text-purple-400 text-xs">{u.searching}</span>}
-                {form.lat && <span className="absolute right-3 top-2.5 text-green-400">✔</span>}
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-white/40 ml-1">{u.date}</label>
+                <input type="date" value={form.birthDate} onChange={e=>setForm({...form,birthDate:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-purple-500 transition outline-none" required />
               </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-white/40 ml-1">{u.time}</label>
+                <input type="time" value={form.birthTime} onChange={e=>setForm({...form,birthTime:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-purple-500 transition outline-none" required />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-white/40 ml-1">{u.country}</label>
+                <select value={form.birthCountry} onChange={e=>setForm({...form,birthCountry:e.target.value,birthCity:'',lat:'',lon:''})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-purple-500 transition outline-none">
+                  {COUNTRIES.map(c=>(<option key={c.code} value={c.code} className="bg-[#05010d]">{c.name}</option>))}
+                </select>
+            </div>
+
+            <div className="relative space-y-1">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-white/40 ml-1">{u.city}</label>
+              <input type="text" value={form.birthCity} onChange={e=>onCity(e.target.value)} onFocus={()=>form.birthCity.length>1&&setShowSug(true)} autoComplete="off" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-purple-500 transition outline-none" required />
               {showSug && suggestions.length>0 && (
-                <ul className="absolute z-50 w-full bg-[#1a0030] border border-purple-700 rounded-lg mt-1 shadow-xl max-h-48 overflow-y-auto">
-                  {suggestions.map((c,i)=>{const cd=c.display_name;return(<li key={i} onClick={()=>pickCity(c)} className="px-3 py-2 hover:bg-purple-800/50 cursor-pointer text-sm text-purple-100 border-b border-purple-900/30">{cd}</li>)})}
+                <ul className="absolute z-50 w-full bg-[#0d011a] border border-white/10 rounded-xl mt-2 shadow-2xl overflow-hidden">
+                  {suggestions.map((c,i)=>(<li key={i} onClick={()=>pickCity(c)} className="px-4 py-3 hover:bg-purple-500/20 cursor-pointer text-sm border-b border-white/5 last:border-0">{c.display_name}</li>))}
                 </ul>
               )}
             </div>
-            <div>
-              <label className="block text-purple-300 text-sm mb-1">{u.email}</label>
-              <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="exemple@email.com" className="w-full bg-purple-900/40 border border-purple-700 rounded-lg px-3 py-2 text-white" />
-              <p className="text-green-400 text-xs mt-1">✨ {u.emailNote}</p>
-            </div>
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-purple-600 to-yellow-500 text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg disabled:opacity-60">
+
+            {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+            <button type="submit" disabled={loading} className="w-full bg-white text-black font-medium py-4 rounded-2xl hover:bg-amber-400 transition transform active:scale-[0.98] disabled:opacity-50">
               {loading ? u.loading : u.btn}
             </button>
           </form>
         ) : (
-          <div className="space-y-6">
-            
-            {/* BLOC ASCENDANT PREMIUM (FORCÉ) */}
-            {result && (
-              <div className="bg-purple-900/40 backdrop-blur-md rounded-2xl p-6 border border-amber-500/40 bg-gradient-to-r from-purple-900/60 to-transparent flex items-center justify-between shadow-xl mb-8">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-amber-500 font-bold mb-2">
-                    {u.ascTitle || "Votre Ascendant"}
-                  </p>
-                  <h2 className="text-4xl font-serif text-white tracking-tight">
-                    {tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant?.sign) || tr(lang, result.ascendant) || "Calcul..."}
-                  </h2>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            {/* 1. EN-TETE PROFIL */}
+            <div className="bg-white/[0.03] border border-white/5 rounded-[2.5rem] p-10 text-center mb-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-500/5 to-transparent pointer-events-none" />
+                <h2 className="text-4xl font-serif mb-4 uppercase tracking-wider">{form.name}</h2>
+                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/40 font-light">
+                  <span>{new Date(form.birthDate).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  <span>à {form.birthTime}</span>
+                  <span className="flex items-center gap-1"><span className="text-amber-500">📍</span> {form.birthCity}</span>
                 </div>
-                <div className="text-5xl opacity-50 filter drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">✨</div>
-              </div>
-            )}
+            </div>
 
-            <div className="bg-purple-900/20 rounded-2xl p-6 border border-purple-700/30">
-              <h2 className="text-xl font-bold text-yellow-400 mb-1">☉ {u.planets}</h2>
-              <p className="text-purple-400 text-sm mb-4">{form.name} — {form.birthDate} — {form.birthCity}</p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+            {/* 2. CARTES ASCENDANT & MILIEU DU CIEL */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-8 hover:border-amber-500/20 transition group">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-6 text-center">{u.ascTitle}</p>
+                <div className="flex items-center justify-center gap-4">
+                   <div className="text-4xl text-purple-400 group-hover:scale-110 transition-transform">✦</div>
+                   <h3 className="text-3xl font-serif">{tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant) || "..."}</h3>
+                </div>
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-8 hover:border-amber-500/20 transition group">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-6 text-center">{u.mcTitle}</p>
+                <div className="flex items-center justify-center gap-4">
+                   <div className="text-4xl text-amber-500 group-hover:rotate-12 transition-transform">✧</div>
+                   <h3 className="text-3xl font-serif">{tr(lang, result.houses?.[9]?.sign) || "..."}</h3>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. TABLEAU DES PLANETES */}
+            <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden shadow-xl">
+              <div className="px-8 py-6 border-b border-white/5 bg-white/[0.01]">
+                <h3 className="text-lg font-serif text-center uppercase tracking-widest">{u.planets}</h3>
+              </div>
+              <div className="overflow-x-auto px-8 py-6">
+                <table className="w-full">
                   <thead>
-                    <tr className="text-purple-300 border-b border-purple-700/30 text-left">
-                      <th className="py-2 pr-4">{u.planets}</th>
-                      <th className="py-2 pr-4">{u.sign}</th>
-                      <th className="py-2 pr-4">{u.pos}</th>
-                      <th className="py-2">{u.house}</th>
+                    <tr className="text-[10px] uppercase tracking-widest text-white/30 text-left border-b border-white/5">
+                      <th className="pb-4 font-normal">Planète</th>
+                      <th className="pb-4 font-normal text-center">Signe</th>
+                      <th className="pb-4 font-normal text-right">Position</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {result?.planets?.map((p: any, i: number) => {
-                      const pLabel = tr(lang, p.name) || tr(lang, p.symbol)
-                      const pSign = tr(lang, p.sign)
-                      const hLabel = tr(lang, 'House')
-                      const pDeg = p.degree
-                      const pHouseNum = p.house
-                      return (
-                        <tr key={i} className="border-b border-purple-900/30 hover:bg-purple-900/20">
-                          <td className="py-2 pr-4 font-semibold text-white">{pLabel}</td>
-                          <td className="py-2 pr-4 text-purple-200">{pSign}</td>
-                          <td className="py-2 pr-4 text-yellow-300 text-xs">{pDeg}</td>
-                          <td className="py-2 text-purple-400">{hLabel} {pHouseNum}</td>
-                        </tr>
-                      )
-                    })}
+                  <tbody className="divide-y divide-white/[0.02]">
+                    {result.planets?.map((p: any, i: number) => (
+                      <tr key={i} className="group hover:bg-white/[0.01] transition">
+                        <td className="py-4 text-sm font-medium flex items-center gap-3">
+                          <span className="text-amber-500/50 group-hover:text-amber-500 transition-colors">○</span> {tr(lang, p.name)}
+                        </td>
+                        <td className="py-4 text-sm text-white/70 text-center">{tr(lang, p.sign)}</td>
+                        <td className="py-4 text-[11px] text-white/40 text-right font-mono italic">{p.degree}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {result?.houses && (
-              <div className="bg-purple-900/20 rounded-2xl p-6 border border-purple-700/30">
-                <h2 className="text-xl font-bold text-yellow-400 mb-4">🏠 {u.houses}</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {result.houses.map((h: any, i: number) => {
-                    const hLabel = tr(lang, 'House')
-                    const hSign = tr(lang, h.sign)
-                    const hNum = h.number
-                    return (
-                      <div key={i} className="bg-purple-900/30 rounded-lg p-3 text-sm border border-purple-800/30">
-                        <span className="text-yellow-400 font-bold">{hLabel} {hNum} </span>
-                        <span className="text-purple-200">{hSign}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            <button onClick={()=>setResult(null)} className="w-full border border-purple-700 text-purple-300 py-3 rounded-xl hover:bg-purple-900/30 transition">
+            <button onClick={()=>setResult(null)} className="w-full mt-12 py-4 text-[10px] uppercase tracking-[0.4em] text-white/20 hover:text-white transition">
               {u.back}
             </button>
           </div>
