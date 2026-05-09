@@ -9,21 +9,22 @@ const COUNTRIES = [
 ]
 
 const L: Record<Language, Record<string,string>> = {
-  fr:{Sun:'Soleil',Moon:'Lune',Mercury:'Mercure',Venus:'Vénus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturne',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluton',Aries:'Bélier',Taurus:'Taureau',Gemini:'Gémeaux',Cancer:'Cancer',Leo:'Lion',Virgo:'Vierge',Libra:'Balance',Scorpio:'Scorpion',Sagittarius:'Sagittaire',Capricorn:'Capricorne',Aquarius:'Verseau',Pisces:'Poissons',House:'Maison'},
-  en:{Sun:'Sun',Moon:'Moon',Mercury:'Mercury',Venus:'Venus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluto',Aries:'Aries',Taurus:'Taurus',Gemini:'Gemini',Cancer:'Cancer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Scorpio',Sagittarius:'Sagittarius',Capricorn:'Capricorn',Aquarius:'Aquarius',Pisces:'Pisces',House:'House'},
-  es:{Sun:'Sol',Moon:'Luna',Mercury:'Mercurio',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Neptuno',Pluto:'Plutón',Aries:'Aries',Taurus:'Tauro',Gemini:'Géminis',Cancer:'Cáncer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Escorpio',Sagittarius:'Sagitario',Capricorn:'Capricornio',Aquarius:'Acuario',Pisces:'Piscis',House:'Casa'},
-  jp:{Sun:'太陽',Moon:'月',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星',Aries:'牡羊座',Taurus:'牡牛座',Gemini:'双子座',Cancer:'蟹座',Leo:'獅子座',Virgo:'乙女座',Libra:'天秤座',Scorpio:'蠍座',Sagittarius:'射手座',Capricorn:'山羊座',Aquarius:'水瓶座',Pisces:'魚座',House:'室'},
-  ro:{Sun:'Soare',Moon:'Lună',Mercury:'Mercur',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptun',Pluto:'Pluto',Aries:'Berbec',Taurus:'Taur',Gemini:'Gemeni',Cancer:'Rac',Leo:'Leu',Virgo:'Fecioară',Libra:'Balanță',Scorpio:'Scorpion',Sagittarius:'Săgetător',Capricorn:'Capricorn',Aquarius:'Vărsător',Pisces:'Pești',House:'Casă'},
+  fr:{Sun:'Soleil',Moon:'Lune',Mercury:'Mercure',Venus:'Vénus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturne',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluton',Aries:'Bélier',Taurus:'Taureau',Gemini:'Gémeaux',Cancer:'Cancer',Leo:'Lion',Virgo:'Vierge',Libra:'Balance',Scorpio:'Scorpion',Sagittarius:'Sagittaire',Capricorn:'Capricorne',Aquarius:'Verseau',Pisces:'Poissons',House:'Maison',Ascendant:'Ascendant'},
+  en:{Sun:'Sun',Moon:'Moon',Mercury:'Mercury',Venus:'Venus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluto',Aries:'Aries',Taurus:'Taurus',Gemini:'Gemini',Cancer:'Cancer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Scorpio',Sagittarius:'Sagittarius',Capricorn:'Capricorn',Aquarius:'Aquarius',Pisces:'Pisces',House:'House',Ascendant:'Ascendant'},
+  es:{Sun:'Sol',Moon:'Luna',Mercury:'Mercurio',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Neptuno',Pluto:'Plutón',Aries:'Aries',Taurus:'Tauro',Gemini:'Géminis',Cancer:'Cáncer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Escorpio',Sagittarius:'Sagitario',Capricorn:'Capricornio',Aquarius:'Acuario',Pisces:'Piscis',House:'Casa',Ascendant:'Ascendente'},
+  jp:{Sun:'太陽',Moon:'月',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星',Aries:'牡羊座',Taurus:'牡牛座',Gemini:'双子座',Cancer:'蟹座',Leo:'獅子座',Virgo:'乙女座',Libra:'天秤座',Scorpio:'蠍座',Sagittarius:'射手座',Capricorn:'山羊座',Aquarius:'水瓶座',Pisces:'魚座',House:'室',Ascendant:'アセンダント'},
+  ro:{Sun:'Soare',Moon:'Lună',Mercury:'Mercur',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptun',Pluto:'Pluto',Aries:'Berbec',Taurus:'Taur',Gemini:'Gemeni',Cancer:'Rac',Leo:'Leu',Virgo:'Fecioară',Libra:'Balanță',Scorpio:'Scorpion',Sagittarius:'Săgetător',Capricorn:'Capricorn',Aquarius:'Vărsător',Pisces:'Pești',House:'Casă',Ascendant:'Ascendent'},
 }
 function tr(lang: Language, k?: string) { return k ? (L[lang]?.[k] || k) : '' }
 
 const UI: Record<Language,Record<string,string>> = {
-  fr:{title:'Votre Carte Natale',sub:'Découvrez votre thème astral — résultats instantanés',name:'Prénom',date:'Date de naissance',time:'Heure de naissance',country:'Pays',city:'Ville de naissance',email:'Votre email',emailNote:'Recevez votre analyse par email — 100% gratuit',btn:'Calculer ma carte natale gratuitement',loading:'Calcul en cours...',planets:'Planètes',houses:'Maisons',sign:'Signe',pos:'Degré',house:'Maison',back:'Nouvelle recherche',searching:'Recherche...'},
-  en:{title:'Your Birth Chart',sub:'Discover your astral theme — instant results',name:'First name',date:'Birth date',time:'Birth time',country:'Country',city:'Birth city',email:'Your email',emailNote:'Receive your analysis by email — 100% free',btn:'Calculate my birth chart for free',loading:'Calculating...',planets:'Planets',houses:'Houses',sign:'Sign',pos:'Degree',house:'House',back:'New search',searching:'Searching...'},
-  es:{title:'Tu Carta Natal',sub:'Descubre tu tema astral — resultados instantáneos',name:'Nombre',date:'Fecha de nacimiento',time:'Hora de nacimiento',country:'País',city:'Ciudad de nacimiento',email:'Tu email',emailNote:'Recibe tu análisis por email — 100% gratis',btn:'Calcular mi carta natal gratis',loading:'Calculando...',planets:'Planetas',houses:'Casas',sign:'Signo',pos:'Grado',house:'Casa',back:'Nueva búsqueda',searching:'Buscando...'},
-  jp:{title:'出生ホロスコープ',sub:'星座テーマを発見 — 即時結果',name:'お名前',date:'生年月日',time:'出生時刻',country:'国',city:'出生都市',email:'メールアドレス',emailNote:'無料で分析をメールで受け取る',btn:'無料でチャートを計算',loading:'計算中...',planets:'惑星',houses:'ハウス',sign:'サイン',pos:'度',house:'室',back:'新しい検索',searching:'検索中...'},
-  ro:{title:'Harta Natală',sub:'Descoperă-ți tema astrală — rezultate instantanee',name:'Prenume',date:'Data nașterii',time:'Ora nașterii',country:'Țară',city:'Orașul nașterii',email:'Email-ul tău',emailNote:'Primește analiza pe email — 100% gratuit',btn:'Calculează harta natală gratuit',loading:'Se calculează...',planets:'Planete',houses:'Case',sign:'Semn',pos:'Grad',house:'Casă',back:'Căutare nouă',searching:'Se caută...'},
+  fr:{title:'Votre Carte Natale',sub:'Découvrez votre thème astral — résultats instantanés',name:'Prénom',date:'Date de naissance',time:'Heure de naissance',country:'Pays',city:'Ville de naissance',email:'Votre email',emailNote:'Recevez votre analyse par email — 100% gratuit',btn:'Calculer ma carte natale gratuitement',loading:'Calcul en cours...',planets:'Planètes',houses:'Maisons',sign:'Signe',pos:'Degré',house:'Maison',back:'Nouvelle recherche',searching:'Recherche...',ascTitle:'Votre Ascendant'},
+  en:{title:'Your Birth Chart',sub:'Discover your astral theme — instant results',name:'First name',date:'Birth date',time:'Birth time',country:'Country',city:'Birth city',email:'Your email',emailNote:'Receive your analysis by email — 100% free',btn:'Calculate my birth chart for free',loading:'Calculating...',planets:'Planets',houses:'Houses',sign:'Sign',pos:'Degree',house:'House',back:'New search',searching:'Searching...',ascTitle:'Your Ascendant'},
+  es:{title:'Tu Carta Natal',sub:'Descubre tu tema astral — resultados instantáneos',name:'Nombre',date:'Fecha de nacimiento',time:'Hora de nacimiento',country:'País',city:'Ciudad de nacimiento',email:'Tu email',emailNote:'Recibe tu análisis por email — 100% gratis',btn:'Calcular mi carta natal gratis',loading:'Calculando...',planets:'Planetas',houses:'Casas',sign:'Signo',pos:'Grado',house:'Casa',back:'Nueva búsqueda',searching:'Buscando...',ascTitle:'Tu Ascendente'},
+  jp:{title:'出生ホロスコープ',sub:'星座テーマを発見 — 即時結果',name:'お名前',date:'生年月日',time:'出生時刻',country:'国',city:'出生都市',email:'メールアドレス',emailNote:'無料で分析をメールで受け取る',btn:'無料でチャートを計算',loading:'計算中...',planets:'惑星',houses:'ハウス',sign:'サイン',pos:'度',house:'室',back:'新しい検索',searching:'検索中...',ascTitle:'アセンダント'},
+  ro:{title:'Harta Natală',sub:'Descoperă-ți tema astrală — rezultate instantanee',name:'Prenume',date:'Data nașterii',time:'Ora nașterii',country:'Țară',city:'Orașul nașterii',email:'Email-ul tău',emailNote:'Primește analiza pe email — 100% gratuit',btn:'Calculează harta natală gratuit',loading:'Se calculează...',planets:'Planete',houses:'Case',sign:'Semn',pos:'Grad',house:'Casă',back:'Căutare nouă',searching:'Se caută...',ascTitle:'Ascendentul Tău'},
 }
+
 export default function CarteNatale() {
   const [lang, setLang] = useState<Language>('fr')
   const [form, setForm] = useState({name:'',birthDate:'',birthTime:'',birthCountry:'FR',birthCity:'',email:'',lat:'',lon:''})
@@ -142,6 +143,20 @@ export default function CarteNatale() {
           </form>
         ) : (
           <div className="space-y-6">
+            
+            {/* BLOC ASCENDANT (NOUVEAU) */}
+            {result?.houses && (
+              <div className="bg-purple-900/30 rounded-2xl p-6 border border-yellow-500/30 bg-gradient-to-r from-purple-900/40 to-transparent flex items-center justify-between shadow-lg">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-yellow-500 opacity-80 font-bold mb-1">{u.ascTitle}</p>
+                  <h2 className="text-4xl font-serif text-white">
+                    {tr(lang, result.houses[0].sign)}
+                  </h2>
+                </div>
+                <div className="text-5xl opacity-40">✨</div>
+              </div>
+            )}
+
             <div className="bg-purple-900/20 rounded-2xl p-6 border border-purple-700/30">
               <h2 className="text-xl font-bold text-yellow-400 mb-1">☉ {u.planets}</h2>
               <p className="text-purple-400 text-sm mb-4">{form.name} — {form.birthDate} — {form.birthCity}</p>
