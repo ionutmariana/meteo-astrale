@@ -96,14 +96,31 @@ function calcAscMC(jdUT: number, lat: number, lon: number) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { birthDate, birthTime, lat, lon, name } = await req.json()
+    // 1. Récupération des données du formulaire incluant l'email et la ville
+    const { birthDate, birthTime, lat, lon, name, email, birthCity } = await req.json()
+    
+    // 2. Récupération de l'adresse IP (Géolocalisation)
+    const forwarded = req.headers.get('x-forwarded-for')
+    const ip = forwarded ? forwarded.split(/, /)[0] : '127.0.0.1'
+
+    // 3. Enregistrement discret dans vos Logs Vercel
+    console.log("--- NOUVELLE CAPTURE EMAIL ---")
+    console.log(`Prénom: ${name}`)
+    console.log(`Email: ${email}`)
+    console.log(`Ville: ${birthCity}`)
+    console.log(`IP: ${ip}`)
+    console.log("------------------------------")
+
     if (!birthDate || !lat || !lon) return NextResponse.json({ error: 'Missing data' }, { status: 400 })
+    
+    // Suite du calcul mathématique original
     const [y, m, d] = birthDate.split('-').map(Number)
     const [h, min] = (birthTime || '12:00').split(':').map(Number)
     const hour = h + min / 60 - lon / 15
     const JD = jd(y, m, d, hour)
     const T = (JD - 2451545.0) / 36525
     const { Asc, MC, cusps } = calcAscMC(JD, Number(lat), Number(lon))
+    
     const planets = PLANETS.map(p => {
       const longitude = p.lon(T)
       return {
@@ -114,6 +131,7 @@ export async function POST(req: NextRequest) {
         degree: Math.round(longitude % 30 * 10) / 10
       }
     })
+
     return NextResponse.json({
       name,
       ascendant: { longitude: Math.round(Asc * 100) / 100, sign: getSign(Asc), degree: Math.round(Asc % 30 * 10) / 10 },
