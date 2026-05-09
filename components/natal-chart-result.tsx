@@ -15,23 +15,32 @@ export default function CarteNataleResult({ chartData, onReset }) {
           <p className="text-gray-400 mt-2 italic">Analyse du ciel au moment de votre naissance</p>
         </div>
 
-        {/* 2. Cartes Ascendant & MC (Manquantes dans la V1) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="glass border border-amber-900/20 rounded-xl p-6 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase text-amber-500 font-bold">Ascendant</p>
-              <h2 className="text-2xl font-serif">{chartData.ascendant?.sign || "Calcul en cours..."}</h2>
-            </div>
-            <Compass className="text-amber-400 w-10 h-10 opacity-50" />
-          </div>
-          <div className="glass border border-amber-900/20 rounded-xl p-6 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase text-amber-500 font-bold">Milieu du Ciel (MC)</p>
-              <h2 className="text-2xl font-serif">{chartData.mc?.sign || "Calcul en cours..."}</h2>
-            </div>
-            <Star className="text-amber-400 w-10 h-10 opacity-50" />
-          </div>
-        </div>
+        {/* 2. Cartes Ascendant & MC */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* Carte Ascendant */}
+  <div className="glass border border-amber-900/40 rounded-xl p-6 flex items-center justify-between shadow-lg shadow-purple-900/20">
+    <div>
+      <p className="text-xs uppercase text-amber-500 font-bold tracking-widest mb-1">Ascendant</p>
+      <h2 className="text-3xl font-serif text-white">
+        {/* On cherche dans chartData.ascendant OU dans la Maison 1 */}
+        {chartData.ascendant?.sign || chartData.houses?.[0]?.sign || "Calcul..."}
+      </h2>
+    </div>
+    <Compass className="text-amber-400 w-12 h-12 opacity-40" />
+  </div>
+
+  {/* Carte Milieu du Ciel (MC) */}
+  <div className="glass border border-amber-900/40 rounded-xl p-6 flex items-center justify-between shadow-lg shadow-purple-900/20">
+    <div>
+      <p className="text-xs uppercase text-amber-500 font-bold tracking-widest mb-1">Milieu du Ciel</p>
+      <h2 className="text-3xl font-serif text-white">
+        {/* Le MC est traditionnellement la Maison 10 */}
+        {chartData.mc?.sign || chartData.houses?.[9]?.sign || "Calcul..."}
+      </h2>
+    </div>
+    <Star className="text-amber-400 w-12 h-12 opacity-40" />
+  </div>
+</div>
 
         {/* 3. Portrait en Clair (La dimension pédagogique) */}
         <div className="bg-[#1a162e]/50 border border-amber-900/10 rounded-xl p-6">
