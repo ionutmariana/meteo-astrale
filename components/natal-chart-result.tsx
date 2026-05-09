@@ -8,7 +8,7 @@ export default function CarteNataleResult({ chartData, onReset }) {
     <div className="min-h-screen bg-[#0e0b1a] text-white p-4 md:p-8 font-sans">
       {/* 1. Header Premium (Inspiration image_9f48db) */}
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="bg-[#1a162e] border border-amber-900/30 rounded-xl p-6 text-center">
+        <div className="glass border border-amber-900/30 rounded-xl p-6 text-center">
           <h1 className="text-3xl font-serif text-amber-400 uppercase tracking-widest">
             {chartData.name || "Votre Carte Natale"}
           </h1>
@@ -17,14 +17,14 @@ export default function CarteNataleResult({ chartData, onReset }) {
 
         {/* 2. Cartes Ascendant & MC (Manquantes dans la V1) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-[#1a162e] border border-amber-900/20 rounded-xl p-6 flex items-center justify-between">
+          <div className="glass border border-amber-900/20 rounded-xl p-6 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase text-amber-500 font-bold">Ascendant</p>
               <h2 className="text-2xl font-serif">{chartData.ascendant?.sign || "Calcul en cours..."}</h2>
             </div>
             <Compass className="text-amber-400 w-10 h-10 opacity-50" />
           </div>
-          <div className="bg-[#1a162e] border border-amber-900/20 rounded-xl p-6 flex items-center justify-between">
+          <div className="glass border border-amber-900/20 rounded-xl p-6 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase text-amber-500 font-bold">Milieu du Ciel (MC)</p>
               <h2 className="text-2xl font-serif">{chartData.mc?.sign || "Calcul en cours..."}</h2>
