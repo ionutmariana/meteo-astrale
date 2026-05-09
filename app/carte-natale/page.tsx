@@ -47,7 +47,7 @@ export default function CarteNatale() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.lat) { setError('Veuillez sélectionner une ville dans la liste'); return }
+    if (!form.lat) { setError('Sélectionnez la ville dans la liste'); return }
     setLoading(true)
     setError('')
     try {
@@ -57,80 +57,102 @@ export default function CarteNatale() {
         body:JSON.stringify(form)
       })
       const data = await res.json()
-      if (data.error) throw new Error(data.error)
       setResult(data)
-    } catch { setError('Erreur de calcul') }
+    } catch { setError('Erreur de connexion') }
     finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-[#05010d] text-white">
+    <div className="min-h-screen bg-[#05010d] text-white selection:bg-amber-500/30">
       <div className="max-w-2xl mx-auto px-6 py-12">
         {!result ? (
-          <form onSubmit={handleSubmit} className="space-y-4 bg-white/5 p-8 rounded-3xl border border-white/10">
-            <h1 className="text-2xl font-serif text-center mb-6">Votre Carte Natale</h1>
-            
-            <input type="text" placeholder="Prénom" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
-            <input type="email" placeholder="Votre email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <input type="date" value={form.birthDate} onChange={e=>setForm({...form,birthDate:e.target.value})} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
-              <input type="time" value={form.birthTime} onChange={e=>setForm({...form,birthTime:e.target.value})} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
-            </div>
+          <div className="animate-in fade-in duration-700">
+            <h1 className="text-4xl font-serif text-center mb-10 tracking-tight">Votre Carte Natale</h1>
+            <form onSubmit={handleSubmit} className="space-y-4 bg-white/[0.03] p-10 rounded-[2.5rem] border border-white/5 shadow-2xl backdrop-blur-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1">Prénom</label>
+                  <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:border-amber-500/50 outline-none transition" required />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1">Email</label>
+                  <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:border-amber-500/50 outline-none transition" required />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1">Date</label>
+                  <input type="date" value={form.birthDate} onChange={e=>setForm({...form,birthDate:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none" required />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1">Heure</label>
+                  <input type="time" value={form.birthTime} onChange={e=>setForm({...form,birthTime:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none" required />
+                </div>
+              </div>
 
-            <select value={form.birthCountry} onChange={e=>setForm({...form,birthCountry:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-              {COUNTRIES.map(c=>(<option key={c.code} value={c.code} className="bg-[#05010d]">{c.name}</option>))}
-            </select>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1">Pays</label>
+                <select value={form.birthCountry} onChange={e=>setForm({...form,birthCountry:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none">
+                  {COUNTRIES.map(c=>(<option key={c.code} value={c.code} className="bg-[#05010d]">{c.name}</option>))}
+                </select>
+              </div>
 
-            <div className="relative">
-              <input type="text" placeholder="Ville de naissance" value={form.birthCity} onChange={e=>onCity(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
-              {showSug && suggestions.length > 0 && (
-                <ul className="absolute z-50 w-full bg-[#0d011a] border border-white/10 rounded-xl mt-1 max-h-40 overflow-y-auto">
-                  {suggestions.map((c,i)=>(<li key={i} onClick={()=>pickCity(c)} className="px-4 py-2 hover:bg-purple-500/20 cursor-pointer text-sm">{c.display_name}</li>))}
-                </ul>
-              )}
-            </div>
+              <div className="relative space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1">Ville de naissance</label>
+                <input type="text" value={form.birthCity} onChange={e=>onCity(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:border-amber-500/50 outline-none transition" required />
+                {showSug && suggestions.length > 0 && (
+                  <ul className="absolute z-50 w-full bg-[#0d011a] border border-white/10 rounded-2xl mt-2 max-h-48 overflow-y-auto shadow-2xl">
+                    {suggestions.map((c,i)=>(<li key={i} onClick={()=>pickCity(c)} className="px-5 py-3 hover:bg-amber-500/10 cursor-pointer text-sm border-b border-white/5 last:border-0">{c.display_name}</li>))}
+                  </ul>
+                )}
+              </div>
 
-            {error && <p className="text-red-400 text-center text-xs">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-amber-400 transition">
-              {loading ? "Calcul en cours..." : "Calculer ma carte"}
-            </button>
-          </form>
+              {error && <p className="text-red-400 text-center text-xs pt-2">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-5 rounded-2xl hover:bg-amber-400 transition transform active:scale-95 disabled:opacity-50 mt-4">
+                {loading ? "Calcul astral en cours..." : "Découvrir ma carte natale"}
+              </button>
+            </form>
+          </div>
         ) : (
-          <div className="space-y-6">
-            <div className="text-center p-8 bg-white/5 rounded-3xl border border-white/10">
-              <h2 className="text-3xl font-serif uppercase">{form.name}</h2>
-              <p className="text-white/40 text-sm">{new Date(form.birthDate).toLocaleDateString()} — {form.birthCity}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
-                <p className="text-[10px] uppercase text-white/30">Ascendant</p>
-                <p className="text-xl font-serif text-amber-400">{tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant)}</p>
-              </div>
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
-                <p className="text-[10px] uppercase text-white/30">Milieu du Ciel</p>
-                <p className="text-xl font-serif text-amber-400">{tr(lang, result.houses?.[9]?.sign) || "Calcul..."}</p>
+          <div className="animate-in slide-in-from-bottom-8 duration-1000">
+            <div className="text-center p-10 bg-white/[0.03] rounded-[3rem] border border-white/5 mb-8 shadow-2xl">
+              <h2 className="text-4xl font-serif uppercase tracking-tighter mb-3">{form.name}</h2>
+              <div className="flex justify-center gap-4 text-white/30 text-xs font-light">
+                <span>{new Date(form.birthDate).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric'})}</span>
+                <span>•</span>
+                <span>{form.birthCity}</span>
               </div>
             </div>
 
-            <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 text-center group hover:border-amber-500/30 transition">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/20 mb-4">Ascendant</p>
+                <p className="text-3xl font-serif text-amber-400">{tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant)}</p>
+              </div>
+              <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 text-center group hover:border-amber-500/30 transition">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/20 mb-4">Milieu du Ciel</p>
+                <p className="text-3xl font-serif text-amber-400">{tr(lang, result.houses?.[9]?.sign) || "..."}</p>
+              </div>
+            </div>
+
+            <div className="bg-white/[0.02] rounded-3xl overflow-hidden border border-white/5">
               <table className="w-full text-sm">
-                <thead className="bg-white/5 text-[10px] uppercase text-white/30">
-                  <tr><th className="px-6 py-3 text-left">Planète</th><th className="px-6 py-3 text-center">Signe</th><th className="px-6 py-3 text-right">Position</th></tr>
+                <thead className="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-white/20">
+                  <tr><th className="px-8 py-5 text-left font-medium">Planète</th><th className="px-8 py-5 text-center font-medium">Signe</th><th className="px-8 py-5 text-right font-medium">Degré</th></tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-white/[0.02]">
                   {result.planets?.map((p: any, i: number) => (
-                    <tr key={i}>
-                      <td className="px-6 py-4 font-medium">{tr(lang, p.name)}</td>
-                      <td className="px-6 py-4 text-center text-white/70">{tr(lang, p.sign)}</td>
-                      <td className="px-6 py-4 text-right font-mono text-white/40">{p.degree}</td>
+                    <tr key={i} className="hover:bg-white/[0.01] transition">
+                      <td className="px-8 py-4 font-medium text-white/80">{tr(lang, p.name)}</td>
+                      <td className="px-8 py-4 text-center text-white/60 font-serif">{tr(lang, p.sign)}</td>
+                      <td className="px-8 py-4 text-right font-mono text-white/30 italic">{p.degree}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <button onClick={()=>setResult(null)} className="w-full text-white/20 text-[10px] uppercase py-4">Nouveau calcul</button>
+            <button onClick={()=>setResult(null)} className="w-full text-white/10 text-[10px] uppercase tracking-[0.5em] py-10 hover:text-white transition">Nouveau calcul</button>
           </div>
         )}
       </div>
