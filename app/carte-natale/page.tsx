@@ -144,16 +144,18 @@ export default function CarteNatale() {
         ) : (
           <div className="space-y-6">
             
-            {/* BLOC ASCENDANT (NOUVEAU) */}
-            {result?.houses && (
-              <div className="bg-purple-900/30 rounded-2xl p-6 border border-yellow-500/30 bg-gradient-to-r from-purple-900/40 to-transparent flex items-center justify-between shadow-lg">
+            {/* BLOC ASCENDANT PREMIUM (FORCÉ) */}
+            {result && (
+              <div className="bg-purple-900/40 backdrop-blur-md rounded-2xl p-6 border border-amber-500/40 bg-gradient-to-r from-purple-900/60 to-transparent flex items-center justify-between shadow-xl mb-8">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-yellow-500 opacity-80 font-bold mb-1">{u.ascTitle}</p>
-                  <h2 className="text-4xl font-serif text-white">
-                    {tr(lang, result.houses[0].sign)}
+                  <p className="text-xs uppercase tracking-widest text-amber-500 font-bold mb-2">
+                    {u.ascTitle || "Votre Ascendant"}
+                  </p>
+                  <h2 className="text-4xl font-serif text-white tracking-tight">
+                    {tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant?.sign) || tr(lang, result.ascendant) || "Calcul..."}
                   </h2>
                 </div>
-                <div className="text-5xl opacity-40">✨</div>
+                <div className="text-5xl opacity-50 filter drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">✨</div>
               </div>
             )}
 
