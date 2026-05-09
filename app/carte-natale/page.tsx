@@ -10,10 +10,6 @@ const COUNTRIES = [
 
 const L: Record<Language, Record<string,string>> = {
   fr:{Sun:'Soleil',Moon:'Lune',Mercury:'Mercure',Venus:'Vénus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturne',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluton',Aries:'Bélier',Taurus:'Taureau',Gemini:'Gémeaux',Cancer:'Cancer',Leo:'Lion',Virgo:'Vierge',Libra:'Balance',Scorpio:'Scorpion',Sagittarius:'Sagittaire',Capricorn:'Capricorne',Aquarius:'Verseau',Pisces:'Poissons',House:'Maison',Ascendant:'Ascendant',MC:'Milieu du Ciel'},
-  en:{Sun:'Sun',Moon:'Moon',Mercury:'Mercury',Venus:'Venus',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptune',Pluto:'Pluto',Aries:'Aries',Taurus:'Taurus',Gemini:'Gemini',Cancer:'Cancer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Scorpio',Sagittarius:'Sagittarius',Capricorn:'Capricorn',Aquarius:'Aquarius',Pisces:'Pisces',House:'House',Ascendant:'Ascendant',MC:'Midheaven'},
-  es:{Sun:'Sol',Moon:'Luna',Mercury:'Mercurio',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Neptuno',Pluto:'Plutón',Aries:'Aries',Taurus:'Tauro',Gemini:'Géminis',Cancer:'Cáncer',Leo:'Leo',Virgo:'Virgo',Libra:'Libra',Scorpio:'Escorpio',Sagittarius:'Sagitario',Capricorn:'Capricornio',Aquarius:'Acuario',Pisces:'Piscis',House:'Casa',Ascendant:'Ascendente',MC:'Medio Cielo'},
-  jp:{Sun:'太陽',Moon:'月',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星',Aries:'牡羊座',Taurus:'牡牛座',Gemini:'双子座',Cancer:'蟹座',Leo:'獅子座',Virgo:'乙女座',Libra:'天秤座',Scorpio:'蠍座',Sagittarius:'射手座',Capricorn:'山羊座',Aquarius:'水瓶座',Pisces:'魚座',House:'室',Ascendant:'アセンダント',MC:'天頂'},
-  ro:{Sun:'Soare',Moon:'Lună',Mercury:'Mercur',Venus:'Venus',Mars:'Marte',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uranus',Neptune:'Neptun',Pluto:'Pluto',Aries:'Berbec',Taurus:'Taur',Gemini:'Gemeni',Cancer:'Rac',Leo:'Leu',Virgo:'Fecioară',Libra:'Balanță',Scorpio:'Scorpion',Sagittarius:'Săgetător',Capricorn:'Capricorn',Aquarius:'Vărsător',Pisces:'Pești',House:'Casă',Ascendant:'Ascendent',MC:'Mijlocul Cerului'},
 }
 function tr(lang: Language, k?: string) { return k ? (L[lang]?.[k] || k) : '' }
 
@@ -24,20 +20,17 @@ export default function CarteNatale() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [suggestions, setSuggestions] = useState<any[]>([])
-  const [searching, setSearching] = useState(false)
   const [showSug, setShowSug] = useState(false)
   const timer = useRef<any>(null)
 
   async function searchCity(q: string) {
     if (q.length < 2) { setSuggestions([]); return }
-    setSearching(true)
     try {
       const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&limit=8&format=json&addressdetails=1&featuretype=city`)
       const d = await r.json()
       setSuggestions(d || [])
       setShowSug(true)
     } catch { setSuggestions([]) }
-    finally { setSearching(false) }
   }
 
   function onCity(v: string) {
@@ -54,8 +47,9 @@ export default function CarteNatale() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.lat) return
+    if (!form.lat) { setError('Veuillez sélectionner une ville dans la liste'); return }
     setLoading(true)
+    setError('')
     try {
       const res = await fetch('/api/natal-chart',{
         method:'POST',
@@ -63,67 +57,67 @@ export default function CarteNatale() {
         body:JSON.stringify(form)
       })
       const data = await res.json()
+      if (data.error) throw new Error(data.error)
       setResult(data)
-    } catch { setError('Erreur') }
+    } catch { setError('Erreur de calcul') }
     finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-[#05010d] text-white font-sans">
-      <nav className="p-4 border-b border-white/5 flex justify-between items-center">
-        <Link href="/" className="font-bold text-amber-400">✧ Meteo Astrale</Link>
-        <select value={lang} onChange={e=>setLang(e.target.value as Language)} className="bg-transparent text-xs border border-white/10 rounded px-2 py-1">
-          <option value="fr">FR</option><option value="en">EN</option>
-        </select>
-      </nav>
-
+    <div className="min-h-screen bg-[#05010d] text-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
         {!result ? (
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10">
-            <h1 className="text-3xl font-serif text-center mb-8">Votre Carte Natale</h1>
+          <form onSubmit={handleSubmit} className="space-y-4 bg-white/5 p-8 rounded-3xl border border-white/10">
+            <h1 className="text-2xl font-serif text-center mb-6">Votre Carte Natale</h1>
+            
             <input type="text" placeholder="Prénom" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
+            <input type="email" placeholder="Votre email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
+            
             <div className="grid grid-cols-2 gap-4">
               <input type="date" value={form.birthDate} onChange={e=>setForm({...form,birthDate:e.target.value})} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
               <input type="time" value={form.birthTime} onChange={e=>setForm({...form,birthTime:e.target.value})} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
             </div>
+
+            <select value={form.birthCountry} onChange={e=>setForm({...form,birthCountry:e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+              {COUNTRIES.map(c=>(<option key={c.code} value={c.code} className="bg-[#05010d]">{c.name}</option>))}
+            </select>
+
             <div className="relative">
               <input type="text" placeholder="Ville de naissance" value={form.birthCity} onChange={e=>onCity(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3" required />
               {showSug && suggestions.length > 0 && (
-                <ul className="absolute z-50 w-full bg-[#0d011a] border border-white/10 rounded-xl mt-1 overflow-hidden">
+                <ul className="absolute z-50 w-full bg-[#0d011a] border border-white/10 rounded-xl mt-1 max-h-40 overflow-y-auto">
                   {suggestions.map((c,i)=>(<li key={i} onClick={()=>pickCity(c)} className="px-4 py-2 hover:bg-purple-500/20 cursor-pointer text-sm">{c.display_name}</li>))}
                 </ul>
               )}
             </div>
+
+            {error && <p className="text-red-400 text-center text-xs">{error}</p>}
             <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-amber-400 transition">
-              {loading ? "Calcul..." : "Découvrir ma carte"}
+              {loading ? "Calcul en cours..." : "Calculer ma carte"}
             </button>
           </form>
         ) : (
-          <div className="space-y-8">
-            <div className="text-center p-10 bg-white/5 rounded-[2.5rem] border border-white/10">
-              <h2 className="text-3xl font-serif uppercase tracking-widest mb-2">{form.name}</h2>
-              <p className="text-white/40 text-sm">{form.birthDate} — {form.birthCity}</p>
+          <div className="space-y-6">
+            <div className="text-center p-8 bg-white/5 rounded-3xl border border-white/10">
+              <h2 className="text-3xl font-serif uppercase">{form.name}</h2>
+              <p className="text-white/40 text-sm">{new Date(form.birthDate).toLocaleDateString()} — {form.birthCity}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
-                <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Ascendant</p>
-                <p className="text-2xl font-serif">{tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant) || "..."}</p>
+                <p className="text-[10px] uppercase text-white/30">Ascendant</p>
+                <p className="text-xl font-serif text-amber-400">{tr(lang, result.houses?.[0]?.sign) || tr(lang, result.ascendant)}</p>
               </div>
               <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
-                <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Milieu du Ciel</p>
-                <p className="text-2xl font-serif">{tr(lang, result.houses?.[9]?.sign) || "..."}</p>
+                <p className="text-[10px] uppercase text-white/30">Milieu du Ciel</p>
+                <p className="text-xl font-serif text-amber-400">{tr(lang, result.houses?.[9]?.sign) || "Calcul..."}</p>
               </div>
             </div>
 
             <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-white/5 text-[10px] uppercase tracking-widest text-white/30">
-                    <th className="px-6 py-4 text-left">Planète</th>
-                    <th className="px-6 py-4 text-center">Signe</th>
-                    <th className="px-6 py-4 text-right">Degré</th>
-                  </tr>
+                <thead className="bg-white/5 text-[10px] uppercase text-white/30">
+                  <tr><th className="px-6 py-3 text-left">Planète</th><th className="px-6 py-3 text-center">Signe</th><th className="px-6 py-3 text-right">Position</th></tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {result.planets?.map((p: any, i: number) => (
@@ -136,8 +130,7 @@ export default function CarteNatale() {
                 </tbody>
               </table>
             </div>
-
-            <button onClick={()=>setResult(null)} className="w-full text-white/20 text-[10px] uppercase tracking-[0.4em] py-4">Refaire un calcul</button>
+            <button onClick={()=>setResult(null)} className="w-full text-white/20 text-[10px] uppercase py-4">Nouveau calcul</button>
           </div>
         )}
       </div>
