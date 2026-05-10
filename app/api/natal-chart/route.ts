@@ -8,24 +8,24 @@ import {
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
 
-/**
- * Heure saisie = heure LOCALE du lieu de naissance.
- * Pas de suffixe 'Z' sur la date.
- *
- * Fuseau approximatif : offsetHeures = Math.round(longitude / 15)
- * (local = UTC + offsetHeures)  =>  UTC = local - offsetHeures
- */
-function longitudeToLocalOffsetMinutes(lonDeg: number) {
-  const offsetHours = Math.round(Number(lonDeg) / 15)
+function resolveUtcOffsetMinutes(body: any, lonNum: number) {
+  const raw = body?.utcOffsetMinutes
+  const fromClient = Number(raw)
+
+  if (raw != null && raw !== '' && Number.isFinite(fromClient)) {
+    return fromClient
+  }
+
+  const offsetHours = Math.round(lonNum / 15)
   return offsetHours * 60
 }
 
 function birthLocalToUtcDate(params: {
   birthDate: string
   birthTime?: string
-  localOffsetMinutes: number
+  utcOffsetMinutes: number
 }) {
-  const { birthDate, birthTime, localOffsetMinutes } = params
+  const { birthDate, birthTime, utcOffsetMinutes } = params
 
   const [y, m, d] = String(birthDate).split('-').map(Number)
   const [hh, mm] = String(birthTime || '12:00').split(':').map(Number)
@@ -36,7 +36,7 @@ function birthLocalToUtcDate(params: {
   const min = Number.isFinite(mm) ? mm : 0
 
   const msLocalDigitsAsUtc = Date.UTC(y, m - 1, d, h, min, 0, 0)
-  const utcMs = msLocalDigitsAsUtc - localOffsetMinutes * 60 * 1000
+  const utcMs = msLocalDigitsAsUtc - utcOffsetMinutes * 60 * 1000
 
   const date = new Date(utcMs)
   if (Number.isNaN(date.getTime())) return { ok: false as const }
@@ -45,8 +45,14 @@ function birthLocalToUtcDate(params: {
 }
 
 export async function POST(req: NextRequest) {
+  let body: any = null
+
   try {
-    const body = await req.json()
+    body = await req.json()
+
+    console.log('[natal-chart] Email reçu (brut):', body?.email)
+    console.log('[natal-chart] utcOffsetMinutes reçu (brut):', body?.utcOffsetMinutes)
+
     const { name, email, birthDate, birthTime, birthCity, lat, lon } = body ?? {}
 
     if (!birthDate || lat == null || lon == null) {
@@ -59,12 +65,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid lat/lon' }, { status: 400 })
     }
 
-    const localOffsetMinutes = longitudeToLocalOffsetMinutes(lonNum)
+    const utcOffsetMinutes = resolveUtcOffsetMinutes(body, lonNum)
+
+    const safeEmail = String(email ?? '').trim().toLowerCase()
+    const safeName = String(name ?? '').trim()
+    const safeBirthCity = String(birthCity ?? '').trim()
+
+    console.log('[natal-chart] Email normalisé:', safeEmail || '(vide)')
+    console.log('[natal-chart] Offset minutes utilisé:', utcOffsetMinutes, `(${utcOffsetMinutes / 60}h)`)
 
     const parsed = birthLocalToUtcDate({
       birthDate,
       birthTime,
-      localOffsetMinutes,
+      utcOffsetMinutes,
     })
 
     if (!parsed.ok) {
@@ -92,11 +105,7 @@ export async function POST(req: NextRequest) {
     const sun = planets.find((p: any) => p.name === 'Soleil')
 
     const BREVO_API_KEY = process.env.BREVO_API_KEY
-    const safeEmail = String(email ?? '').trim().toLowerCase()
-    const safeName = String(name ?? '').trim()
-    const safeBirthCity = String(birthCity ?? '').trim()
-
-    console.log('Email reçu pour Brevo:', safeEmail || '(vide)')
+    console.log('[natal-chart] BREVO_API_KEY présent:', Boolean(BREVO_API_KEY))
 
     if (BREVO_API_KEY && safeEmail) {
       const controller = new AbortController()
@@ -122,18 +131,24 @@ export async function POST(req: NextRequest) {
         .then(async (r) => {
           if (!r.ok) {
             const txt = await r.text().catch(() => '')
-            console.warn('Brevo HTTP:', r.status, txt)
+            console.warn('[natal-chart] Brevo HTTP:', r.status, txt)
+          } else {
+            console.log('[natal-chart] Brevo: contact OK')
           }
         })
-        .catch((err) => console.warn('Brevo fetch warning:', err?.message || err))
+        .catch((err) => {
+          console.warn('[natal-chart] Brevo fetch:', err?.message || err)
+        })
         .finally(() => clearTimeout(timeout))
+    } else {
+      console.warn('[natal-chart] Brevo ignoré (clé ou email manquant)')
     }
 
     return NextResponse.json({
       name: safeName,
       meta: {
-        localOffsetMinutesUsed: localOffsetMinutes,
-        localOffsetHoursUsed: localOffsetMinutes / 60,
+        utcOffsetMinutesUsed: utcOffsetMinutes,
+        utcOffsetHoursUsed: utcOffsetMinutes / 60,
       },
       soleil: {
         sign: sun?.sign ?? null,
@@ -153,7 +168,7 @@ export async function POST(req: NextRequest) {
       cusps,
     })
   } catch (error) {
-    console.error('Erreur API Natal Chart:', error)
+    console.error('[natal-chart] Erreur:', error)
     return NextResponse.json(
       { error: 'Erreur lors du calcul de la carte.' },
       { status: 500 }
