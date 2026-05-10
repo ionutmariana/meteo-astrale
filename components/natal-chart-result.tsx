@@ -1,66 +1,76 @@
 import React from 'react';
-import { Sun, Moon, Star, Compass, Home } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function CarteNataleResult({ chartData, onReset }) {
+interface NatalChartResultProps {
+  chartData: {
+    ascendant?: { sign: string; degree: number };
+    mc?: { sign: string; degree: number };
+    planets?: Array<{ name: string; sign: string; degree: number; house: number }>;
+    houses?: Array<{ number: number; sign: string; degree: number }>;
+  };
+  userName: string;
+}
+
+export default function NatalChartResult({ chartData, userName }: NatalChartResultProps) {
   if (!chartData) return null;
 
   return (
-    <div className="min-h-screen bg-[#0e0b1a] text-white p-4 md:p-8 font-sans">
-      {/* 1. Header Premium (Inspiration image_9f48db) */}
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="glass border border-amber-900/30 rounded-xl p-6 text-center">
-          <h1 className="text-3xl font-serif text-amber-400 uppercase tracking-widest">
-            {chartData.name || "Votre Carte Natale"}
-          </h1>
-          <p className="text-gray-400 mt-2 italic">Analyse du ciel au moment de votre naissance</p>
-        </div>
-
-        {/* 2. Cartes Ascendant & MC */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {/* Carte Ascendant */}
-  <div className="glass border border-amber-900/40 rounded-xl p-6 flex items-center justify-between shadow-lg shadow-purple-900/20">
-    <div>
-      <p className="text-xs uppercase text-amber-500 font-bold tracking-widest mb-1">Ascendant</p>
-      <h2 className="text-3xl font-serif text-white">
-        {/* On cherche dans chartData.ascendant OU dans la Maison 1 */}
-        {chartData.ascendant?.sign || chartData.houses?.[0]?.sign || "Calcul..."}
-      </h2>
-    </div>
-    <Compass className="text-amber-400 w-12 h-12 opacity-40" />
-  </div>
-
-  {/* Carte Milieu du Ciel (MC) */}
-  <div className="glass border border-amber-900/40 rounded-xl p-6 flex items-center justify-between shadow-lg shadow-purple-900/20">
-    <div>
-      <p className="text-xs uppercase text-amber-500 font-bold tracking-widest mb-1">Milieu du Ciel</p>
-      <h2 className="text-3xl font-serif text-white">
-        {/* Le MC est traditionnellement la Maison 10 */}
-        {chartData.mc?.sign || chartData.houses?.[9]?.sign || "Calcul..."}
-      </h2>
-    </div>
-    <Star className="text-amber-400 w-12 h-12 opacity-40" />
-  </div>
-</div>
-
-        {/* 3. Portrait en Clair (La dimension pédagogique) */}
-        <div className="bg-[#1a162e]/50 border border-amber-900/10 rounded-xl p-6">
-          <h3 className="text-xl font-serif text-amber-400 mb-4">Votre Portrait en Clair</h3>
-          <p className="text-gray-300 leading-relaxed italic">
-            "Votre Soleil en {chartData.planets?.[0]?.sign} suggère une personnalité profonde..."
-          </p>
-          <p className="text-xs text-gray-500 mt-4">* Cette analyse simplifiée aide à comprendre votre thème sans jargon technique.</p>
-        </div>
-
-        {/* 4. Grille des Maisons (Structure image_9f48db) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="bg-[#1a162e] border border-white/5 p-3 rounded-lg text-center">
-              <p className="text-[10px] text-gray-500 uppercase">Maison {i + 1}</p>
-              <p className="text-sm font-semibold">{chartData.houses?.[i]?.sign || "---"}</p>
-            </div>
-          ))}
-        </div>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header avec Nom */}
+      <div className="text-center space-y-2">
+        <h1 className="text-4xl font-bold tracking-tight text-white uppercase">
+          {userName}
+        </h1>
+        <div className="h-1 w-20 bg-amber-500 mx-auto rounded-full" />
       </div>
+
+      {/* Points Cardinaux (Ascendant & MC) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+              Ascendant
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <h2 className="text-3xl font-serif text-white">
+              {chartData.ascendant?.sign} {chartData.ascendant?.degree?.toFixed(1)}°
+            </h2>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+              Milieu du Ciel
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <h2 className="text-3xl font-serif text-white">
+              {chartData.mc?.sign} {chartData.mc?.degree?.toFixed(1)}°
+            </h2>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Positions Planétaires */}
+      <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-slate-400 text-sm uppercase">Positions Planétaires</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {chartData.planets?.map((planet) => (
+              <div key={planet.name} className="flex justify-between items-center py-2 border-b border-slate-800 last:border-0">
+                <span className="text-slate-300 font-medium">{planet.name}</span>
+                <span className="text-amber-500 font-serif">
+                  {planet.sign} {planet.degree.toFixed(1)}°
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
