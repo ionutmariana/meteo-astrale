@@ -79,7 +79,7 @@ export default function BirthForm({
       utcOffsetMinutes,
     }
 
-    console.log('[birth-form] POST /api/natal-chart payload:', {
+    console.log('[birth-form] POST /api/birth-chart payload:', {
       ...payload,
       email: payload.email ? `${payload.email.slice(0, 2)}…` : '(vide)',
     })
@@ -90,21 +90,29 @@ export default function BirthForm({
     }
 
     setLoading(true)
+
     try {
-      const res = await fetch('/api/natal-chart', {
+      const res = await fetch('/api/birth-chart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        cache: 'no-store', // 🔥 empêche le cache Vercel
       })
 
-      const data = await res.json().catch(() => null)
+      const data = await res.json()
+
+      console.log('[birth-form] API RESULT:', data) // 🔥 vérifie l’ascendant réel
+
       if (!res.ok) {
         throw new Error(data?.error || 'Erreur serveur')
       }
 
+      // 🔥🔥🔥 LA LIGNE QUI RÉPARE TOUT 🔥🔥🔥
+      // On passe TOUTE la réponse API telle quelle au composant
       onResult?.(data)
+
     } catch (err) {
-      console.error(err)
+      console.error('[birth-form] ERROR:', err)
       alert('Erreur lors du calcul.')
     } finally {
       setLoading(false)
