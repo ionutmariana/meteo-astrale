@@ -33,10 +33,14 @@ export default function CarteNatale() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(form)
       })
+      
+      if (!res.ok) throw new Error('Erreur serveur')
+      
       const data = await res.json()
       setResult(data)
     } catch (err) {
       console.error(err)
+      alert("Une erreur est survenue lors du calcul. Vérifiez votre connexion.")
     } finally {
       setLoading(false)
     }
@@ -84,11 +88,15 @@ export default function CarteNatale() {
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
                     <p className="text-[10px] uppercase text-white/30">Ascendant</p>
-                    <p className="text-xl font-serif">{result.ascendant?.sign} {result.ascendant?.degree}°</p>
+                    <p className="text-xl font-serif">
+                      {result.ascendant?.sign} {result.ascendant?.degree}°
+                    </p>
                 </div>
                 <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
                     <p className="text-[10px] uppercase text-white/30">Milieu du Ciel</p>
-                    <p className="text-xl font-serif">{result.mc?.sign} {result.mc?.degree}°</p>
+                    <p className="text-xl font-serif">
+                      {result.mc?.sign} {result.mc?.degree}°
+                    </p>
                 </div>
             </div>
 
