@@ -8,51 +8,41 @@ import {
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
 
-function resolveUtcOffsetMinutes(body: any, lonNum: number) {
-  const raw = body?.utcOffsetMinutes
-  const fromClient = Number(raw)
-
-  if (raw != null && raw !== '' && Number.isFinite(fromClient)) {
-    return fromClient
-  }
-
-  const offsetHours = Math.round(lonNum / 15)
-  return offsetHours * 60
-}
-
-function birthLocalToUtcDate(params: {
+/**
+ * Heure saisie = heure LOCALE du lieu (wall clock).
+ * Fuseau auto : local ≈ UTC + autoOffsetHours, avec autoOffsetHours = round(lon/15), lon en ° (Est +, Ouest -).
+ * Instant UTC = timestamp construit à partir des chiffres locaux (interprétés comme si c’était une horloge UTC)
+ *              MOINS autoOffsetHours.
+ */
+function birthLocalWallTimeToUtcDate(params: {
   birthDate: string
   birthTime?: string
-  utcOffsetMinutes: number
+  lonDeg: number
 }) {
-  const { birthDate, birthTime, utcOffsetMinutes } = params
+  const { birthDate, birthTime, lonDeg } = params
+
+  const autoOffsetHours = Math.round(Number(lonDeg) / 15)
 
   const [y, m, d] = String(birthDate).split('-').map(Number)
   const [hh, mm] = String(birthTime || '12:00').split(':').map(Number)
 
-  if (![y, m, d].every(Number.isFinite)) return { ok: false as const }
+  if (![y, m, d].every(Number.isFinite)) return { ok: false as const, autoOffsetHours }
 
   const h = Number.isFinite(hh) ? hh : 0
   const min = Number.isFinite(mm) ? mm : 0
 
-  const msLocalDigitsAsUtc = Date.UTC(y, m - 1, d, h, min, 0, 0)
-  const utcMs = msLocalDigitsAsUtc - utcOffsetMinutes * 60 * 1000
+  const msIfLocalDigitsWereUtc = Date.UTC(y, m - 1, d, h, min, 0, 0)
+  const utcMs = msIfLocalDigitsWereUtc - autoOffsetHours * 60 * 60 * 1000
 
   const date = new Date(utcMs)
-  if (Number.isNaN(date.getTime())) return { ok: false as const }
+  if (Number.isNaN(date.getTime())) return { ok: false as const, autoOffsetHours }
 
-  return { ok: true as const, date }
+  return { ok: true as const, date, autoOffsetHours }
 }
 
 export async function POST(req: NextRequest) {
-  let body: any = null
-
   try {
-    body = await req.json()
-
-    console.log('[natal-chart] Email reçu (brut):', body?.email)
-    console.log('[natal-chart] utcOffsetMinutes reçu (brut):', body?.utcOffsetMinutes)
-
+    const body = await req.json()
     const { name, email, birthDate, birthTime, birthCity, lat, lon } = body ?? {}
 
     if (!birthDate || lat == null || lon == null) {
@@ -65,26 +55,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid lat/lon' }, { status: 400 })
     }
 
-    const utcOffsetMinutes = resolveUtcOffsetMinutes(body, lonNum)
-
-    const safeEmail = String(email ?? '').trim().toLowerCase()
-    const safeName = String(name ?? '').trim()
-    const safeBirthCity = String(birthCity ?? '').trim()
-
-    console.log('[natal-chart] Email normalisé:', safeEmail || '(vide)')
-    console.log('[natal-chart] Offset minutes utilisé:', utcOffsetMinutes, `(${utcOffsetMinutes / 60}h)`)
-
-    const parsed = birthLocalToUtcDate({
+    const parsed = birthLocalWallTimeToUtcDate({
       birthDate,
       birthTime,
-      utcOffsetMinutes,
+      lonDeg: lonNum,
     })
 
     if (!parsed.ok) {
       return NextResponse.json({ error: 'Invalid birth date/time' }, { status: 400 })
     }
 
-    const date = parsed.date
+    const { date, autoOffsetHours } = parsed
 
     const { cusps, Asc, MC } = createEphemeris(date, latNum, lonNum)
 
@@ -105,7 +86,9 @@ export async function POST(req: NextRequest) {
     const sun = planets.find((p: any) => p.name === 'Soleil')
 
     const BREVO_API_KEY = process.env.BREVO_API_KEY
-    console.log('[natal-chart] BREVO_API_KEY présent:', Boolean(BREVO_API_KEY))
+    const safeEmail = String(email ?? '').trim().toLowerCase()
+    const safeName = String(name ?? '').trim()
+    const safeBirthCity = String(birthCity ?? '').trim()
 
     if (BREVO_API_KEY && safeEmail) {
       const controller = new AbortController()
@@ -131,24 +114,18 @@ export async function POST(req: NextRequest) {
         .then(async (r) => {
           if (!r.ok) {
             const txt = await r.text().catch(() => '')
-            console.warn('[natal-chart] Brevo HTTP:', r.status, txt)
-          } else {
-            console.log('[natal-chart] Brevo: contact OK')
+            console.warn('Brevo HTTP:', r.status, txt)
           }
         })
-        .catch((err) => {
-          console.warn('[natal-chart] Brevo fetch:', err?.message || err)
-        })
+        .catch((err) => console.warn('Brevo fetch:', err?.message || err))
         .finally(() => clearTimeout(timeout))
-    } else {
-      console.warn('[natal-chart] Brevo ignoré (clé ou email manquant)')
     }
 
     return NextResponse.json({
       name: safeName,
       meta: {
-        utcOffsetMinutesUsed: utcOffsetMinutes,
-        utcOffsetHoursUsed: utcOffsetMinutes / 60,
+        autoOffsetHours,
+        lonUsed: lonNum,
       },
       soleil: {
         sign: sun?.sign ?? null,
@@ -168,7 +145,7 @@ export async function POST(req: NextRequest) {
       cusps,
     })
   } catch (error) {
-    console.error('[natal-chart] Erreur:', error)
+    console.error('Erreur API Natal Chart:', error)
     return NextResponse.json(
       { error: 'Erreur lors du calcul de la carte.' },
       { status: 500 }
