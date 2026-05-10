@@ -9,37 +9,37 @@ import {
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
 
 /**
- * Interprète birthDate + birthTime comme heure locale au lieu de naissance,
- * puis retourne l'instant Unix correct.
+ * Heure saisie = heure LOCALE du lieu de naissance.
+ * Pas de suffixe 'Z' sur la date.
  *
- * utcOffsetMinutes = décalage du fuseau LOCAL par rapport à l'UTC
- * (local = UTC + offset). Ex : Bucarest GMT+2 hiver → utcOffsetMinutes = 120.
+ * Fuseau approximatif : offsetHeures = Math.round(longitude / 15)
+ * (local = UTC + offsetHeures)  =>  UTC = local - offsetHeures
  */
-function parseBirthInstantLocal(params: {
+function longitudeToLocalOffsetMinutes(lonDeg: number) {
+  const offsetHours = Math.round(Number(lonDeg) / 15)
+  return offsetHours * 60
+}
+
+function birthLocalToUtcDate(params: {
   birthDate: string
   birthTime?: string
-  utcOffsetMinutes: number
+  localOffsetMinutes: number
 }) {
-  const { birthDate, birthTime, utcOffsetMinutes } = params
+  const { birthDate, birthTime, localOffsetMinutes } = params
 
   const [y, m, d] = String(birthDate).split('-').map(Number)
   const [hh, mm] = String(birthTime || '12:00').split(':').map(Number)
 
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
-    return { ok: false as const }
-  }
+  if (![y, m, d].every(Number.isFinite)) return { ok: false as const }
 
   const h = Number.isFinite(hh) ? hh : 0
   const min = Number.isFinite(mm) ? mm : 0
 
-  const msLocalAsIfUtc = Date.UTC(y, m - 1, d, h, min, 0, 0)
+  const msLocalDigitsAsUtc = Date.UTC(y, m - 1, d, h, min, 0, 0)
+  const utcMs = msLocalDigitsAsUtc - localOffsetMinutes * 60 * 1000
 
-  const instantMs = msLocalAsIfUtc - utcOffsetMinutes * 60 * 1000
-
-  const date = new Date(instantMs)
-  if (Number.isNaN(date.getTime())) {
-    return { ok: false as const }
-  }
+  const date = new Date(utcMs)
+  if (Number.isNaN(date.getTime())) return { ok: false as const }
 
   return { ok: true as const, date }
 }
@@ -47,8 +47,7 @@ function parseBirthInstantLocal(params: {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, birthDate, birthTime, birthCity, lat, lon, utcOffsetMinutes } =
-      body ?? {}
+    const { name, email, birthDate, birthTime, birthCity, lat, lon } = body ?? {}
 
     if (!birthDate || lat == null || lon == null) {
       return NextResponse.json({ error: 'Data missing' }, { status: 400 })
@@ -56,24 +55,16 @@ export async function POST(req: NextRequest) {
 
     const latNum = Number(lat)
     const lonNum = Number(lon)
-
     if (Number.isNaN(latNum) || Number.isNaN(lonNum)) {
       return NextResponse.json({ error: 'Invalid lat/lon' }, { status: 400 })
     }
 
-    const offsetFromBody =
-      utcOffsetMinutes != null && utcOffsetMinutes !== ''
-        ? Number(utcOffsetMinutes)
-        : NaN
+    const localOffsetMinutes = longitudeToLocalOffsetMinutes(lonNum)
 
-    const offsetMinutes = Number.isFinite(offsetFromBody)
-      ? offsetFromBody
-      : Math.round(lonNum / 15) * 60
-
-    const parsed = parseBirthInstantLocal({
+    const parsed = birthLocalToUtcDate({
       birthDate,
       birthTime,
-      utcOffsetMinutes: offsetMinutes,
+      localOffsetMinutes,
     })
 
     if (!parsed.ok) {
@@ -87,7 +78,7 @@ export async function POST(req: NextRequest) {
     const ascLon = normalize360(Asc)
     const mcLon = normalize360(MC)
 
-    const planets = PLANETS.map((p) => {
+    const planets = PLANETS.map((p: any) => {
       const longitude = normalize360(p.lon(date.getTime() / 1000))
       return {
         name: p.name,
@@ -98,12 +89,18 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const sun = planets.find((p) => p.name === 'Soleil')
+    const sun = planets.find((p: any) => p.name === 'Soleil')
 
     const BREVO_API_KEY = process.env.BREVO_API_KEY
-    if (BREVO_API_KEY && email) {
+    const safeEmail = String(email ?? '').trim().toLowerCase()
+    const safeName = String(name ?? '').trim()
+    const safeBirthCity = String(birthCity ?? '').trim()
+
+    console.log('Email reçu pour Brevo:', safeEmail || '(vide)')
+
+    if (BREVO_API_KEY && safeEmail) {
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 4000)
+      const timeout = setTimeout(() => controller.abort(), 8000)
 
       void fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
@@ -112,10 +109,10 @@ export async function POST(req: NextRequest) {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          email,
+          email: safeEmail,
           attributes: {
-            PRENOM: name || '',
-            VILLE_NAISSANCE: birthCity || '',
+            PRENOM: safeName,
+            VILLE_NAISSANCE: safeBirthCity,
           },
           updateEnabled: true,
         }),
@@ -125,19 +122,18 @@ export async function POST(req: NextRequest) {
         .then(async (r) => {
           if (!r.ok) {
             const txt = await r.text().catch(() => '')
-            console.warn('Brevo non-OK:', r.status, txt)
+            console.warn('Brevo HTTP:', r.status, txt)
           }
         })
-        .catch((err) => {
-          console.warn('Brevo Sync Warning:', err?.message || err)
-        })
+        .catch((err) => console.warn('Brevo fetch warning:', err?.message || err))
         .finally(() => clearTimeout(timeout))
     }
 
     return NextResponse.json({
-      name,
+      name: safeName,
       meta: {
-        utcOffsetMinutesUsed: offsetMinutes,
+        localOffsetMinutesUsed: localOffsetMinutes,
+        localOffsetHoursUsed: localOffsetMinutes / 60,
       },
       soleil: {
         sign: sun?.sign ?? null,
