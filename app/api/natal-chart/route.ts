@@ -4,7 +4,9 @@ import {
   PLANETS,
   getSign,
   getHouse,
-} from '@/lib/astrology'
+} from '@/lib/astrology-data'
+// Si l'alias @ ne marche pas chez toi, remplace la ligne ci-dessus par :
+// import { createEphemeris, PLANETS, getSign, getHouse } from '../../../lib/astrology-data'
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
 
@@ -13,8 +15,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { name, email, birthDate, birthTime, birthCity, lat, lon } = body ?? {}
 
-    // Validation robuste
-    if (!birthDate || !birthTime || lat == null || lon == null) {
+    // Validation
+    if (!birthDate || lat == null || lon == null) {
       return NextResponse.json({ error: 'Data missing' }, { status: 400 })
     }
 
@@ -25,8 +27,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid lat/lon' }, { status: 400 })
     }
 
-    // Date UTC (évite les surprises de timezone)
-    const date = new Date(`${birthDate}T${birthTime}:00Z`)
+    const safeBirthTime = birthTime || '12:00'
+    const date = new Date(`${birthDate}T${safeBirthTime}:00Z`)
     if (Number.isNaN(date.getTime())) {
       return NextResponse.json({ error: 'Invalid birth date/time' }, { status: 400 })
     }
@@ -34,9 +36,9 @@ export async function POST(req: NextRequest) {
     // 1) Calcul astro
     const { cusps, Asc, MC } = createEphemeris(date, latNum, lonNum)
 
-    // 2) Formatage planètes (liste complète)
-    const planets = PLANETS.map((p) => {
-      const longitude = normalize360(p.lon(date.getTime() / 1000)) // secondes Unix
+    // 2) Liste complète des planètes
+    const planets = PLANETS.map((p: any) => {
+      const longitude = normalize360(p.lon(date.getTime() / 1000))
       return {
         name: p.name,
         longitude: Math.round(longitude * 100) / 100,
@@ -46,10 +48,10 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // 3) Soleil isolé (mais gardé aussi dans planets)
-    const sun = planets.find((p) => p.name === 'Soleil')
+    // 3) Soleil isolé pour les piliers (reste aussi dans planets)
+    const sun = planets.find((p: any) => p.name === 'Soleil')
 
-    // 4) Sync Brevo non bloquante
+    // 4) Brevo (non bloquant)
     const BREVO_API_KEY = process.env.BREVO_API_KEY
     if (BREVO_API_KEY && email) {
       fetch('https://api.brevo.com/v3/contacts', {
@@ -69,7 +71,7 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error('Brevo Sync Error:', err))
     }
 
-    // 5) Réponse JSON pour le front
+    // 5) Réponse API
     return NextResponse.json({
       name,
       soleil: {
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
         sign: getSign(normalize360(MC)),
         degree: Math.round((normalize360(MC) % 30) * 10) / 10,
       },
-      planets, // Soleil reste présent ici
+      planets,
       cusps,
     })
   } catch (error) {
