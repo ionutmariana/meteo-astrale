@@ -1,7 +1,7 @@
 'use client'
 
 import { useLanguage } from '@/contexts/language-context'
-import { planets, zodiacSigns, mockDailyTransits } from '@/lib/astrology-data'
+import { planets, zodiacSigns, mockDailyTransits } from '@/lib/astrology'
 import type { Language } from '@/lib/translations'
 
 interface PlanetCardProps {

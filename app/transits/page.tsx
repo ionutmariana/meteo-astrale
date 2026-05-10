@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useLanguage } from '@/contexts/language-context'
 import { useAstrologyData } from '@/hooks/use-astrology-api'
 import { PlanetCard } from '@/components/planet-card'
-import { planets, mockDailyTransits } from '@/lib/astrology-data'
+import { planets, mockDailyTransits } from '@/lib/astrology'
 import { Button } from '@/components/ui/button'
 import {
   Select,

@@ -1,6 +1,6 @@
 'use client'
 
-import { zodiacSigns, planets } from '@/lib/astrology-data'
+import { zodiacSigns, planets } from '@/lib/astrology'
 
 interface PlanetPosition {
   planet: string

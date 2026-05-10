@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useLanguage } from '@/contexts/language-context'
-import { zodiacSigns, type ZodiacSignId } from '@/lib/astrology-data'
+import { zodiacSigns, type ZodiacSignId } from '@/lib/astrology'
 import { HoroscopePanel } from '@/components/horoscope-panel'
 import { cn } from '@/lib/utils'
 

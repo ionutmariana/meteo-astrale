@@ -1,7 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
-import { mockDailyTransits } from '@/lib/astrology-data'
+import { mockDailyTransits } from '@/lib/astrology'
 
 const API_URL = 'https://json.freeastrologyapi.com/planets'
 

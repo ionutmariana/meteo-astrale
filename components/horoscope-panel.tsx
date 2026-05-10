@@ -1,7 +1,7 @@
 'use client'
 
 import { useLanguage } from '@/contexts/language-context'
-import { mockHoroscopes, type ZodiacSignId } from '@/lib/astrology-data'
+import { mockHoroscopes, type ZodiacSignId } from '@/lib/astrology'
 import type { Language } from '@/lib/translations'
 import { Heart, Briefcase, Activity, Wallet } from 'lucide-react'
 
