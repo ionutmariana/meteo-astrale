@@ -77,17 +77,32 @@ export default function CarteNatale() {
       ) : (
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="bg-white/5 p-8 rounded-3xl border border-white/10 text-center">
-                <h2 className="text-3xl font-serif text-amber-400 uppercase">{form.name}</h2>
+                <h2 className="text-3xl font-serif text-amber-400 uppercase">{result.name || form.name}</h2>
                 <p className="text-white/40">{form.birthDate} — {form.birthCity}</p>
             </div>
-            {/* Affichage des planètes ici */}
+
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
                     <p className="text-[10px] uppercase text-white/30">Ascendant</p>
-                    <p className="text-xl font-serif">{result.ascendant || "Calcul..."}</p>
+                    <p className="text-xl font-serif">{result.ascendant?.sign} {result.ascendant?.degree}°</p>
+                </div>
+                <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
+                    <p className="text-[10px] uppercase text-white/30">Milieu du Ciel</p>
+                    <p className="text-xl font-serif">{result.mc?.sign} {result.mc?.degree}°</p>
                 </div>
             </div>
-            <button onClick={()=>setResult(null)} className="w-full text-white/20 text-xs uppercase tracking-widest">Nouveau calcul</button>
+
+            <div className="space-y-2">
+              <h3 className="text-sm uppercase tracking-widest text-white/30 mb-4">Positions Planétaires</h3>
+              {result.planets?.map((p: any, i: number) => (
+                <div key={i} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10">
+                  <span className="font-medium">{p.name}</span>
+                  <span className="text-amber-400">{p.sign} {p.degree}°</span>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={()=>setResult(null)} className="w-full text-white/20 text-xs uppercase tracking-widest pt-8">Nouveau calcul</button>
         </div>
       )}
     </div>
