@@ -4,14 +4,51 @@ import {
   PLANETS,
   getSign,
   getHouse,
-} from '../../../lib/astrology-data'
+} from '@/lib/astrology'
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
+
+/**
+ * Interprète birthDate + birthTime comme heure locale au lieu de naissance,
+ * puis retourne l'instant Unix correct.
+ *
+ * utcOffsetMinutes = décalage du fuseau LOCAL par rapport à l'UTC
+ * (local = UTC + offset). Ex : Bucarest GMT+2 hiver → utcOffsetMinutes = 120.
+ */
+function parseBirthInstantLocal(params: {
+  birthDate: string
+  birthTime?: string
+  utcOffsetMinutes: number
+}) {
+  const { birthDate, birthTime, utcOffsetMinutes } = params
+
+  const [y, m, d] = String(birthDate).split('-').map(Number)
+  const [hh, mm] = String(birthTime || '12:00').split(':').map(Number)
+
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    return { ok: false as const }
+  }
+
+  const h = Number.isFinite(hh) ? hh : 0
+  const min = Number.isFinite(mm) ? mm : 0
+
+  const msLocalAsIfUtc = Date.UTC(y, m - 1, d, h, min, 0, 0)
+
+  const instantMs = msLocalAsIfUtc - utcOffsetMinutes * 60 * 1000
+
+  const date = new Date(instantMs)
+  if (Number.isNaN(date.getTime())) {
+    return { ok: false as const }
+  }
+
+  return { ok: true as const, date }
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, birthDate, birthTime, birthCity, lat, lon } = body ?? {}
+    const { name, email, birthDate, birthTime, birthCity, lat, lon, utcOffsetMinutes } =
+      body ?? {}
 
     if (!birthDate || lat == null || lon == null) {
       return NextResponse.json({ error: 'Data missing' }, { status: 400 })
@@ -24,14 +61,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid lat/lon' }, { status: 400 })
     }
 
-    const safeBirthTime = birthTime || '12:00'
-    const date = new Date(`${birthDate}T${safeBirthTime}:00Z`)
+    const offsetFromBody =
+      utcOffsetMinutes != null && utcOffsetMinutes !== ''
+        ? Number(utcOffsetMinutes)
+        : NaN
 
-    if (Number.isNaN(date.getTime())) {
+    const offsetMinutes = Number.isFinite(offsetFromBody)
+      ? offsetFromBody
+      : Math.round(lonNum / 15) * 60
+
+    const parsed = parseBirthInstantLocal({
+      birthDate,
+      birthTime,
+      utcOffsetMinutes: offsetMinutes,
+    })
+
+    if (!parsed.ok) {
       return NextResponse.json({ error: 'Invalid birth date/time' }, { status: 400 })
     }
 
+    const date = parsed.date
+
     const { cusps, Asc, MC } = createEphemeris(date, latNum, lonNum)
+
+    const ascLon = normalize360(Asc)
+    const mcLon = normalize360(MC)
 
     const planets = PLANETS.map((p) => {
       const longitude = normalize360(p.lon(date.getTime() / 1000))
@@ -82,19 +136,22 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       name,
+      meta: {
+        utcOffsetMinutesUsed: offsetMinutes,
+      },
       soleil: {
         sign: sun?.sign ?? null,
         degree: sun?.degree ?? null,
       },
       ascendant: {
-        longitude: Math.round(normalize360(Asc) * 100) / 100,
-        sign: getSign(normalize360(Asc)),
-        degree: Math.round((normalize360(Asc) % 30) * 10) / 10,
+        longitude: Math.round(ascLon * 100) / 100,
+        sign: getSign(ascLon),
+        degree: Math.round((ascLon % 30) * 10) / 10,
       },
       mc: {
-        longitude: Math.round(normalize360(MC) * 100) / 100,
-        sign: getSign(normalize360(MC)),
-        degree: Math.round((normalize360(MC) % 30) * 10) / 10,
+        longitude: Math.round(mcLon * 100) / 100,
+        sign: getSign(mcLon),
+        degree: Math.round((mcLon % 30) * 10) / 10,
       },
       planets,
       cusps,
