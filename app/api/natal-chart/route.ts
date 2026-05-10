@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const { cusps, Asc, MC } = createEphemeris(date, latNum, lonNum)
 
-    const planets = PLANETS.map((p: any) => {
+    const planets = PLANETS.map((p) => {
       const longitude = normalize360(p.lon(date.getTime() / 1000))
       return {
         name: p.name,
@@ -44,9 +44,8 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const sun = planets.find((p: any) => p.name === 'Soleil')
+    const sun = planets.find((p) => p.name === 'Soleil')
 
-    // Brevo non bloquant
     const BREVO_API_KEY = process.env.BREVO_API_KEY
     if (BREVO_API_KEY && email) {
       const controller = new AbortController()
