@@ -5,7 +5,7 @@ import {
   getSign,
   getHouse,
 } from '@/lib/astrology-data'
-// Si l'alias @ ne marche pas chez toi, remplace la ligne ci-dessus par :
+// Si l'alias @ ne fonctionne pas en build, remplace par:
 // import { createEphemeris, PLANETS, getSign, getHouse } from '../../../lib/astrology-data'
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     const safeBirthTime = birthTime || '12:00'
     const date = new Date(`${birthDate}T${safeBirthTime}:00Z`)
+
     if (Number.isNaN(date.getTime())) {
       return NextResponse.json({ error: 'Invalid birth date/time' }, { status: 400 })
     }
@@ -51,10 +52,13 @@ export async function POST(req: NextRequest) {
     // 3) Soleil isolé pour les piliers (reste aussi dans planets)
     const sun = planets.find((p: any) => p.name === 'Soleil')
 
-    // 4) Brevo (non bloquant)
+    // 4) Sync Brevo non bloquante et tolérante aux erreurs réseau
     const BREVO_API_KEY = process.env.BREVO_API_KEY
     if (BREVO_API_KEY && email) {
-      fetch('https://api.brevo.com/v3/contacts', {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 4000)
+
+      void fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
         headers: {
           'api-key': BREVO_API_KEY,
@@ -68,7 +72,20 @@ export async function POST(req: NextRequest) {
           },
           updateEnabled: true,
         }),
-      }).catch((err) => console.error('Brevo Sync Error:', err))
+        signal: controller.signal,
+        cache: 'no-store',
+      })
+        .then(async (r) => {
+          if (!r.ok) {
+            const txt = await r.text().catch(() => '')
+            console.warn('Brevo non-OK:', r.status, txt)
+          }
+        })
+        .catch((err) => {
+          // Ne jamais casser la réponse astrologique pour un souci Brevo
+          console.warn('Brevo Sync Warning:', err?.message || err)
+        })
+        .finally(() => clearTimeout(timeout))
     }
 
     // 5) Réponse API
