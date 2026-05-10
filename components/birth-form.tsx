@@ -1,150 +1,193 @@
 'use client'
 
-import { useState } from 'react'
-import { useLanguage } from '@/contexts/language-context'
-import { countries } from '@/lib/astrology'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Sparkles, Loader2 } from 'lucide-react'
-import type { Language } from '@/lib/translations'
+import { useRef, useState } from 'react'
 
-interface BirthFormProps {
-  onSubmit: (data: BirthData) => void
-  isLoading?: boolean
-}
-
-export interface BirthData {
+type FormState = {
   name: string
-  date: string
-  time: string
-  city: string
-  country: string
+  email: string
+  birthDate: string
+  birthTime: string
+  birthCity: string
+  lat: string
+  lon: string
 }
 
-export function BirthForm({ onSubmit, isLoading }: BirthFormProps) {
-  const { t, language } = useLanguage()
-  const [formData, setFormData] = useState<BirthData>({
+export default function BirthForm({
+  onResult,
+}: {
+  onResult?: (data: any) => void
+}) {
+  const [form, setForm] = useState<FormState>({
     name: '',
-    date: '',
-    time: '',
-    city: '',
-    country: 'FR',
+    email: '',
+    birthDate: '',
+    birthTime: '',
+    birthCity: '',
+    lat: '',
+    lon: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
+  const [loading, setLoading] = useState(false)
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSug, setShowSug] = useState(false)
+  const timer = useRef<any>(null)
+
+  async function searchCity(q: string) {
+    if (q.length < 3) {
+      setSuggestions([])
+      setShowSug(false)
+      return
+    }
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`
+    )
+    const d = await r.json()
+    setSuggestions(Array.isArray(d) ? d : [])
+    setShowSug(true)
   }
 
-  const handleChange = (field: keyof BirthData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleCityChange = (v: string) => {
+    setForm({ ...form, birthCity: v, lat: '', lon: '' })
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => searchCity(v), 500)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!form.lat || !form.lon) {
+      alert('Sélectionne une ville dans la liste.')
+      return
+    }
+
+    const lonNum = Number(form.lon)
+    if (!Number.isFinite(lonNum)) {
+      alert('Longitude invalide.')
+      return
+    }
+
+    const utcOffsetMinutes = Math.round(lonNum / 15) * 60
+
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      birthDate: form.birthDate,
+      birthTime: form.birthTime,
+      birthCity: form.birthCity.trim(),
+      lat: form.lat,
+      lon: form.lon,
+      utcOffsetMinutes,
+    }
+
+    console.log('[birth-form] POST /api/natal-chart payload:', {
+      ...payload,
+      email: payload.email ? `${payload.email.slice(0, 2)}…` : '(vide)',
+    })
+
+    if (!payload.email) {
+      alert('Email obligatoire.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/natal-chart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(data?.error || 'Erreur serveur')
+      }
+
+      onResult?.(data)
+    } catch (err) {
+      console.error(err)
+      alert('Erreur lors du calcul.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 md:p-8 space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Name */}
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-cream">
-            {t.natalChart.form.name}
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            required
-            className="h-12 bg-input border-border text-cream placeholder:text-muted-foreground"
-            placeholder="Marie"
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3"
+        placeholder="Prénom"
+        value={form.name}
+        onChange={(e) => setForm({ ...form, name: e.target.value })}
+        required
+      />
 
-        {/* Date */}
-        <div className="space-y-2">
-          <Label htmlFor="date" className="text-cream">
-            {t.natalChart.form.date}
-          </Label>
-          <Input
-            id="date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => handleChange('date', e.target.value)}
-            required
-            className="h-12 bg-input border-border text-cream"
-          />
-        </div>
+      <input
+        className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3"
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        name="email"
+        placeholder="Email"
+        value={form.email}
+        onChange={(e) => setForm({ ...form, email: e.target.value })}
+        required
+      />
 
-        {/* Time */}
-        <div className="space-y-2">
-          <Label htmlFor="time" className="text-cream">
-            {t.natalChart.form.time}
-          </Label>
-          <Input
-            id="time"
-            type="time"
-            value={formData.time}
-            onChange={(e) => handleChange('time', e.target.value)}
-            required
-            className="h-12 bg-input border-border text-cream"
-          />
-        </div>
-
-        {/* City */}
-        <div className="space-y-2">
-          <Label htmlFor="city" className="text-cream">
-            {t.natalChart.form.city}
-          </Label>
-          <Input
-            id="city"
-            type="text"
-            value={formData.city}
-            onChange={(e) => handleChange('city', e.target.value)}
-            required
-            className="h-12 bg-input border-border text-cream placeholder:text-muted-foreground"
-            placeholder="Paris"
-          />
-        </div>
-
-        {/* Country */}
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="country" className="text-cream">
-            {t.natalChart.form.country}
-          </Label>
-          <Select value={formData.country} onValueChange={(value) => handleChange('country', value)}>
-            <SelectTrigger className="h-12 bg-input border-border text-cream">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="glass">
-              {countries.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  {country.name[language as Language]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-2 gap-4">
+        <input
+          className="rounded-xl border border-white/20 bg-white/10 px-4 py-3"
+          type="date"
+          value={form.birthDate}
+          onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+          required
+        />
+        <input
+          className="rounded-xl border border-white/20 bg-white/10 px-4 py-3"
+          type="time"
+          value={form.birthTime}
+          onChange={(e) => setForm({ ...form, birthTime: e.target.value })}
+          required
+        />
       </div>
 
-      <Button 
-        type="submit" 
-        className="btn-gold w-full h-14 text-lg"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        ) : (
-          <Sparkles className="mr-2 h-5 w-5" />
+      <div className="relative">
+        <input
+          className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3"
+          placeholder="Ville de naissance"
+          value={form.birthCity}
+          onChange={(e) => handleCityChange(e.target.value)}
+          required
+        />
+        {showSug && suggestions.length > 0 && (
+          <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-white/20 bg-[#0d011a] shadow-2xl">
+            {suggestions.map((s, i) => (
+              <li
+                key={i}
+                className="cursor-pointer border-b border-white/5 p-3 text-sm hover:bg-amber-500/20"
+                onClick={() => {
+                  setForm({
+                    ...form,
+                    birthCity: s.display_name,
+                    lat: String(s.lat),
+                    lon: String(s.lon),
+                  })
+                  setShowSug(false)
+                }}
+              >
+                {s.display_name}
+              </li>
+            ))}
+          </ul>
         )}
-        {t.natalChart.form.submit}
-      </Button>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-xl bg-white py-4 font-bold text-black disabled:opacity-50"
+      >
+        {loading ? 'Calcul…' : 'Calculer'}
+      </button>
     </form>
   )
 }
