@@ -4,9 +4,7 @@ import {
   PLANETS,
   getSign,
   getHouse,
-} from '@/lib/astrology-data'
-// Si l'alias @ ne fonctionne pas en build, remplace par:
-// import { createEphemeris, PLANETS, getSign, getHouse } from '../../../lib/astrology-data'
+} from '../../../lib/astrology-data'
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
 
@@ -15,7 +13,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { name, email, birthDate, birthTime, birthCity, lat, lon } = body ?? {}
 
-    // Validation
     if (!birthDate || lat == null || lon == null) {
       return NextResponse.json({ error: 'Data missing' }, { status: 400 })
     }
@@ -34,10 +31,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid birth date/time' }, { status: 400 })
     }
 
-    // 1) Calcul astro
     const { cusps, Asc, MC } = createEphemeris(date, latNum, lonNum)
 
-    // 2) Liste complète des planètes
     const planets = PLANETS.map((p: any) => {
       const longitude = normalize360(p.lon(date.getTime() / 1000))
       return {
@@ -49,10 +44,9 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // 3) Soleil isolé pour les piliers (reste aussi dans planets)
     const sun = planets.find((p: any) => p.name === 'Soleil')
 
-    // 4) Sync Brevo non bloquante et tolérante aux erreurs réseau
+    // Brevo non bloquant
     const BREVO_API_KEY = process.env.BREVO_API_KEY
     if (BREVO_API_KEY && email) {
       const controller = new AbortController()
@@ -82,13 +76,11 @@ export async function POST(req: NextRequest) {
           }
         })
         .catch((err) => {
-          // Ne jamais casser la réponse astrologique pour un souci Brevo
           console.warn('Brevo Sync Warning:', err?.message || err)
         })
         .finally(() => clearTimeout(timeout))
     }
 
-    // 5) Réponse API
     return NextResponse.json({
       name,
       soleil: {
