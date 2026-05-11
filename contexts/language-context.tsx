@@ -1,19 +1,23 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-
-export type Language = 'fr' | 'en'
+import { translations, type Language, type TranslationType } from '@/lib/translations'
 
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   toggleLanguage: () => void
+  t: TranslationType // <-- AJOUT CRITIQUE
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  // Initialisation stable pour le rendu serveur
   const [language, setLanguageState] = useState<Language>('fr')
+
+  // t est calculé ici : si language n'est pas prêt, on force 'fr'
+  const t = translations[language] || translations.fr
 
   useEffect(() => {
     const saved = localStorage.getItem('app-language') as Language
@@ -31,7 +35,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const toggleLanguage = () => setLanguageState(prev => prev === 'fr' ? 'en' : 'fr')
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   )
@@ -39,6 +43,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
-  if (!context) throw new Error('useLanguage doit être utilisé dans un LanguageProvider')
+  
+  // SÉCURITÉ POUR LE BUILD : Si le hook est appelé hors du Provider 
+  // (ce qui arrive souvent pendant le prerendering de Vercel)
+  if (!context) {
+    return {
+      language: 'fr' as Language,
+      setLanguage: () => {},
+      toggleLanguage: () => {},
+      t: translations.fr
+    }
+  }
+  
   return context
 }
