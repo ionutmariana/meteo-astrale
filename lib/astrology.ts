@@ -1,15 +1,34 @@
 // ------------------------------------------------------------
-// ASTROLOGIE TROPICALE — VERSION PROPRE ET COMPLÈTE
+// ZODIAC SIGNS (pour le front-end)
+// ------------------------------------------------------------
+
+export const zodiacSigns = [
+  { id: 'aries', symbol: '♈', element: 'fire', dates: '21/03 - 19/04' },
+  { id: 'taurus', symbol: '♉', element: 'earth', dates: '20/04 - 20/05' },
+  { id: 'gemini', symbol: '♊', element: 'air', dates: '21/05 - 20/06' },
+  { id: 'cancer', symbol: '♋', element: 'water', dates: '21/06 - 22/07' },
+  { id: 'leo', symbol: '♌', element: 'fire', dates: '23/07 - 22/08' },
+  { id: 'virgo', symbol: '♍', element: 'earth', dates: '23/08 - 22/09' },
+  { id: 'libra', symbol: '♎', element: 'air', dates: '23/09 - 22/10' },
+  { id: 'scorpio', symbol: '♏', element: 'water', dates: '23/10 - 21/11' },
+  { id: 'sagittarius', symbol: '♐', element: 'fire', dates: '22/11 - 21/12' },
+  { id: 'capricorn', symbol: '♑', element: 'earth', dates: '22/12 - 19/01' },
+  { id: 'aquarius', symbol: '♒', element: 'air', dates: '20/01 - 18/02' },
+  { id: 'pisces', symbol: '♓', element: 'water', dates: '19/02 - 20/03' },
+] as const
+
+export type ZodiacSignId = (typeof zodiacSigns)[number]['id']
+
+// ------------------------------------------------------------
+// OUTILS DE CALCUL
 // ------------------------------------------------------------
 
 const normalize360 = (v: number) => ((v % 360) + 360) % 360
 
-// Date julienne
 export function getJulianDate(date: Date): number {
   return date.getTime() / 86400000 + 2440587.5
 }
 
-// Détermine le signe tropical
 export function getSign(lon: number): string {
   const signs = [
     "Bélier","Taureau","Gémeaux","Cancer",
@@ -20,20 +39,18 @@ export function getSign(lon: number): string {
 }
 
 // ------------------------------------------------------------
-// CALCUL ASCENDANT / MC / MAISONS — TROPICAL
+// ASCENDANT / MC / MAISONS — TROPICAL
 // ------------------------------------------------------------
 
 function calcAscMc(jd: number, lat: number, lonDeg: number) {
   const T = (jd - 2451545.0) / 36525
 
-  // Temps sidéral de Greenwich
   let gmst =
     280.46061837 +
     360.98564736629 * (jd - 2451545.0) +
     0.000387933 * T * T -
     (T * T * T) / 38710000
 
-  // Temps sidéral local
   const lst = normalize360(gmst + lonDeg)
 
   const eps = 23.439291 - 0.0130042 * T
@@ -41,13 +58,11 @@ function calcAscMc(jd: number, lat: number, lonDeg: number) {
   const latRad = (lat * Math.PI) / 180
   const ramc = (lst * Math.PI) / 180
 
-  // MC tropical
   const MC = normalize360(
     (Math.atan2(Math.sin(ramc), Math.cos(ramc) * Math.cos(epsRad)) * 180) /
       Math.PI
   )
 
-  // ASC tropical
   const Asc = normalize360(
     (Math.atan2(
       -Math.cos(ramc),
@@ -57,7 +72,6 @@ function calcAscMc(jd: number, lat: number, lonDeg: number) {
       Math.PI
   )
 
-  // Maisons égales tropicales
   const cusps = Array.from({ length: 12 }, (_, i) =>
     normalize360(Asc + i * 30)
   )
@@ -65,7 +79,6 @@ function calcAscMc(jd: number, lat: number, lonDeg: number) {
   return { Asc, MC, cusps }
 }
 
-// Détermine la maison d’un point
 export function getHouse(lon: number, cusps: number[]): number {
   const L = normalize360(lon)
   for (let i = 0; i < 12; i++) {
@@ -78,7 +91,6 @@ export function getHouse(lon: number, cusps: number[]): number {
   return 12
 }
 
-// Création du thème tropical
 export function createEphemeris(date: Date, lat: number, lonDeg: number) {
   const jd = getJulianDate(date)
   const { Asc, MC, cusps } = calcAscMc(jd, lat, lonDeg)
@@ -94,7 +106,6 @@ const TFromUnixSeconds = (unixSec: number) => {
   return (JD - 2451545.0) / 36525
 }
 
-// Soleil tropical
 const sunLon = (t: number) => {
   const L = normalize360(280.46646 + 36000.76983 * t)
   const g = normalize360(357.52911 + 35999.05029 * t)
@@ -105,14 +116,9 @@ const sunLon = (t: number) => {
   )
 }
 
-// Lune tropicale (approximation)
 const moonLon = (t: number) => {
   return normalize360(218.316 + 481267.8813 * t)
 }
-
-// ------------------------------------------------------------
-// TABLEAU COMPLET DES PLANÈTES RAPIDES
-// ------------------------------------------------------------
 
 export const PLANETS = [
   { 
