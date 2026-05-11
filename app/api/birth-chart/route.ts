@@ -1,41 +1,43 @@
 import { NextResponse } from 'next/server'
+import { createEphemeris, getSign, PLANETS, getHouse } from '@/lib/astrology'
 
-/**
- * Calcule le décalage UTC pour une date et des coordonnées
- */
+async function geocodeCity(query: string) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&format=json`
+  const res = await fetch(url)
+  const data = await res.json()
+  if (!data.results?.length) throw new Error('Ville introuvable')
+  return {
+    lat: data.results[0].latitude,
+    lon: data.results[0].longitude,
+    name: data.results[0].name,
+    country: data.results[0].country || '',
+  }
+}
+
 async function getUTCOffset(lat: number, lon: number, dateStr: string): Promise<number> {
   try {
     const res = await fetch(
       `https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}&date=${dateStr}`
     )
-    if (!res.ok) throw new Error('API timezone indisponible')
     const data = await res.json()
     return (data.utc_offset_seconds || 0) / 3600
   } catch {
-    // Fallback : 15° = 1 heure + règle DST simplifiée
-    const baseOffset = Math.round(lon / 15)
     const month = parseInt(dateStr.split('-')[1])
-    const isDST = month >= 4 && month <= 10 // Avril à Octobre = heure d'été (approx.)
+    const baseOffset = Math.round(lon / 15)
+    const isDST = month >= 4 && month <= 10
     return baseOffset + (isDST ? 1 : 0)
   }
 }
 
-/**
- * Convertit une heure locale en UTC avec gestion des fractions d'offset
- */
 function localToUTC(hour: number, minute: number, offset: number) {
-  // Convertir en minutes totales pour éviter les erreurs de flottant
   const totalLocalMinutes = hour * 60 + minute
   const offsetMinutes = Math.round(offset * 60)
   let totalUTCMinutes = totalLocalMinutes - offsetMinutes
-
-  // Gérer les débordements (reste entre 0 et 1439 minutes = 0h-23h59)
   totalUTCMinutes = ((totalUTCMinutes % 1440) + 1440) % 1440
-
-  const utcHour = Math.floor(totalUTCMinutes / 60)
-  const utcMinute = totalUTCMinutes % 60
-
-  return { hour: utcHour, minute: utcMinute }
+  return {
+    hour: Math.floor(totalUTCMinutes / 60),
+    minute: totalUTCMinutes % 60,
+  }
 }
 
 export async function POST(req: Request) {
@@ -50,92 +52,48 @@ export async function POST(req: Request) {
       )
     }
 
-    // 1. Coordonnées
-    let latitude: number
-    let longitude: number
-    let cityName = city || ''
-    let countryName = country || ''
+    // Coordonnées
+    let latitude: number, longitude: number, cityName = city || '', countryName = country || ''
 
     if (lat !== undefined && lon !== undefined) {
       latitude = parseFloat(lat)
       longitude = parseFloat(lon)
     } else {
-      const query = country ? `${city}, ${country}` : city
-      const geoRes = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&format=json`
-      )
-      const geoData = await geoRes.json()
-      if (!geoData.results || geoData.results.length === 0) {
-        return NextResponse.json({ error: 'Ville introuvable' }, { status: 404 })
-      }
-      latitude = geoData.results[0].latitude
-      longitude = geoData.results[0].longitude
-      cityName = geoData.results[0].name
-      countryName = geoData.results[0].country || ''
+      const loc = await geocodeCity(country ? `${city}, ${country}` : city)
+      latitude = loc.lat
+      longitude = loc.lon
+      cityName = loc.name
+      countryName = loc.country
     }
 
-    // 2. Parser la date et l'heure locales
+    // Parser date/heure locale
     const [year, month, day] = birthDate.split('-').map(Number)
     const [localHour, localMinute] = birthTime.split(':').map(Number)
 
-    // 3. Calculer l'offset UTC
+    // Offset UTC
     const utcOffset = await getUTCOffset(latitude, longitude, birthDate)
-
-    // 4. Convertir heure locale → UTC (avec gestion des fractions)
     const utcTime = localToUTC(localHour, localMinute, utcOffset)
 
-    // Validation finale : l'heure doit être entre 0-23
-    if (utcTime.hour < 0 || utcTime.hour > 23 || utcTime.minute < 0 || utcTime.minute > 59) {
-      return NextResponse.json(
-        { error: 'Erreur de conversion horaire' },
-        { status: 400 }
-      )
-    }
+    // Date UTC corrigée
+    const utcDate = new Date(Date.UTC(year, month - 1, day, utcTime.hour, utcTime.minute))
 
-    console.log('📍 Coordonnées:', latitude, longitude)
-    console.log('🕐 Heure locale:', `${localHour}h${localMinute}`)
-    console.log('🕐 UTC Offset:', utcOffset, 'heures')
-    console.log('🕐 Heure UTC:', `${utcTime.hour}h${utcTime.minute}`)
+    console.log('📍', latitude, longitude)
+    console.log('🕐 Local:', `${localHour}h${localMinute}`)
+    console.log('🕐 UTC:', `${utcTime.hour}h${utcTime.minute}`)
 
-    // 5. Appel à l'API astrologique
-    const apiKey = process.env.ASTRO_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Clé API non configurée' }, { status: 500 })
-    }
+    // Calcul local
+    const chart = createEphemeris(utcDate, latitude, longitude)
+    const unixSec = utcDate.getTime() / 1000
 
-    const astroRes = await fetch('https://json.freeastrologyapi.com/planets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        year,
-        month,
-        date: day,
-        hours: utcTime.hour,
-        minutes: utcTime.minute,
-        seconds: 0,
-        latitude,
-        longitude,
-        timezone: 0,
-        config: {
-          observation_point: 'geocentric',
-          ayanamsha: 'tropical',
-        },
-      }),
+    const planetsPositions = PLANETS.map(p => {
+      const lon = p.lon(unixSec)
+      return {
+        name: p.name,
+        sign: getSign(lon),
+        degree: lon % 30,
+        house: getHouse(lon, chart.cusps),
+      }
     })
-
-    if (!astroRes.ok) {
-      const errData = await astroRes.json().catch(() => ({}))
-      console.error('Erreur API astro:', errData)
-      return NextResponse.json(
-        { error: 'Erreur lors du calcul astrologique' },
-        { status: 502 }
-      )
-    }
-
-    const data = await astroRes.json()
 
     return NextResponse.json({
       name: name || 'Anonyme',
@@ -143,41 +101,19 @@ export async function POST(req: Request) {
       birthTime,
       utcOffset,
       utcTime: `${String(utcTime.hour).padStart(2, '0')}:${String(utcTime.minute).padStart(2, '0')}`,
-      location: {
-        city: cityName,
-        country: countryName,
-        lat: latitude,
-        lon: longitude,
-      },
-      ascendant: data.ascendant
-        ? { sign: data.ascendant.sign, degree: data.ascendant.degree }
-        : null,
-      mc: data.midheaven
-        ? { sign: data.midheaven.sign, degree: data.midheaven.degree }
-        : null,
-      planets: Array.isArray(data.output)
-        ? data.output.map((p: any) => ({
-            name: p.name,
-            sign: p.sign,
-            degree: p.degree,
-            house: p.house,
-            retrograde: p.retrograde || false,
-          }))
-        : [],
-      houses: Array.isArray(data.houses)
-        ? data.houses.map((h: any) => ({
-            number: h.house_number,
-            sign: h.sign,
-            degree: h.degree,
-          }))
-        : [],
+      location: { city: cityName, country: countryName, lat: latitude, lon: longitude },
+      ascendant: { sign: getSign(chart.Asc), degree: chart.Asc % 30 },
+      mc: { sign: getSign(chart.MC), degree: chart.MC % 30 },
+      planets: planetsPositions,
+      houses: chart.cusps.map((c, i) => ({
+        number: i + 1,
+        sign: getSign(c),
+        degree: c % 30,
+      })),
     })
 
   } catch (err: any) {
     console.error('[API ERROR]:', err)
-    return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
