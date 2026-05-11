@@ -7,7 +7,7 @@ import { zodiacSigns, type ZodiacSignId } from '@/lib/astrology'
 import { HoroscopePanel } from '@/components/horoscope-panel'
 import { cn } from '@/lib/utils'
 
-export default function ZodiacSelector() {
+export function ZodiacSelector() {
   const { language } = useLanguage()
   const [selectedSign, setSelectedSign] = useState<ZodiacSignId | null>(null)
   const [isLoading, setIsLoading] = useState(false)
