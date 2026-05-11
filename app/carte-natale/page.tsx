@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { BirthForm } from '@/components/birth-form'
-import { NatalChartResult } from '@/components/natal-chart-result'
+import NatalChartResult from '@/components/natal-chart-result'
 
 export default function CarteNatalePage() {
   const [result, setResult] = useState<any>(null)
