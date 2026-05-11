@@ -1,121 +1,120 @@
 'use client'
 
-import { useState } from 'react'
-import { useLanguage } from '@/contexts/language-context'
+import { useState, useEffect } from 'react'
 
-interface BirthData {
-  name: string
-  birthDate: string
-  birthTime: string
-  city: string
-  country: string
-}
-
-interface BirthFormProps {
-  onSubmit: (data: BirthData) => void
-  isLoading?: boolean
-}
-
-// Ajout de "default" ici pour corriger l'erreur de build
-export default function BirthForm({ onSubmit, isLoading = false }: BirthFormProps) {
-  const { language } = useLanguage()
-  const [formData, setFormData] = useState<BirthData>({
+export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void, isLoading: boolean }) {
+  const [formData, setFormData] = useState({
     name: '',
-    birthDate: '',
-    birthTime: '',
-    city: '',
-    country: ''
+    date: '',
+    time: '',
   })
+  const [cityQuery, setCityQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [selectedCity, setSelectedCity] = useState<any>(null)
+
+  // Recherche de ville avec Debounce (500ms) pour éviter de saturer l'API
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (cityQuery.length > 2 && !selectedCity) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${cityQuery}&limit=5`)
+          const data = await res.json()
+          setSuggestions(data)
+        } catch (err) {
+          console.error("Erreur géocodage:", err)
+        }
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [cityQuery, selectedCity])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    if (!selectedCity) {
+      alert("Veuillez sélectionner une ville dans la liste suggérée.")
+      return
+    }
+    onSubmit({
+      ...formData,
+      city: selectedCity.display_name,
+      lat: selectedCity.lat,
+      lon: selectedCity.lon
+    })
   }
-
-  const handleChange = (field: keyof BirthData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }))
-  }
-
-  const t = (fr: string, en: string) => language === 'fr' ? fr : en
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm text-slate-300 mb-1">
-          {t('Nom complet', 'Full name')}
-        </label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={handleChange('name')}
-          className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
-          required
-        />
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm text-gray-400 block mb-2">Prénom</label>
+          <input 
+            type="text" 
+            required
+            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none transition-colors"
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+          />
+        </div>
+        <div className="relative">
+          <label className="text-sm text-gray-400 block mb-2">Ville de naissance</label>
+          <input 
+            type="text" 
+            required
+            value={cityQuery}
+            placeholder="Cherchez une ville..."
+            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none transition-colors"
+            onChange={(e) => {
+              setCityQuery(e.target.value)
+              setSelectedCity(null)
+            }}
+          />
+          {suggestions.length > 0 && !selectedCity && (
+            <ul className="absolute z-50 bg-slate-900 border border-white/20 rounded-lg mt-1 w-full max-h-40 overflow-y-auto shadow-2xl">
+              {suggestions.map((s) => (
+                <li 
+                  key={s.place_id}
+                  onClick={() => {
+                    setSelectedCity(s)
+                    setCityQuery(s.display_name)
+                    setSuggestions([])
+                  }}
+                  className="p-3 hover:bg-white/10 cursor-pointer text-sm text-gray-300 border-b border-white/5 last:border-0"
+                >
+                  {s.display_name}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm text-slate-300 mb-1">
-            {t('Date de naissance', 'Birth date')}
-          </label>
-          <input
-            type="date"
-            value={formData.birthDate}
-            onChange={handleChange('birthDate')}
-            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+          <label className="text-sm text-gray-400 block mb-2">Date de naissance</label>
+          <input 
+            type="date" 
             required
+            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none"
+            onChange={(e) => setFormData({...formData, date: e.target.value})}
           />
         </div>
         <div>
-          <label className="block text-sm text-slate-300 mb-1">
-            {t('Heure de naissance', 'Birth time')}
-          </label>
-          <input
-            type="time"
-            value={formData.birthTime}
-            onChange={handleChange('birthTime')}
-            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+          <label className="text-sm text-gray-400 block mb-2">Heure de naissance</label>
+          <input 
+            type="time" 
             required
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm text-slate-300 mb-1">
-            {t('Ville de naissance', 'Birth city')}
-          </label>
-          <input
-            type="text"
-            value={formData.city}
-            onChange={handleChange('city')}
-            placeholder={t('Ex: Paris', 'Ex: London')}
-            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm text-slate-300 mb-1">
-            {t('Pays (optionnel)', 'Country (optional)')}
-          </label>
-          <input
-            type="text"
-            value={formData.country}
-            onChange={handleChange('country')}
-            placeholder={t('Ex: France', 'Ex: UK')}
-            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none"
+            onChange={(e) => setFormData({...formData, time: e.target.value})}
           />
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-3 bg-amber-500/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-500/30 disabled:opacity-50 transition-colors"
+      <button 
+        type="submit" 
+        disabled={isLoading || !selectedCity}
+        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 py-4 rounded-xl font-bold text-white hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-orange-900/20"
       >
-        {isLoading ? t('Calcul...', 'Calculating...') : t('Calculer mon thème', 'Calculate my chart')}
+        {isLoading ? "Calcul cosmique en cours..." : "Calculer ma Carte Natale"}
       </button>
     </form>
   )
