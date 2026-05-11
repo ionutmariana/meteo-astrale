@@ -2,59 +2,56 @@
 
 import { useState } from 'react'
 import { useLanguage } from '@/contexts/language-context'
-import { zodiacSigns, type ZodiacSignId } from '@/lib/astrology'
+import { getSign } from '@/lib/astrology' // On garde getSign si besoin
 import { HoroscopePanel } from '@/components/horoscope-panel'
 import { cn } from '@/lib/utils'
 
-export function ZodiacSelector() {
-  const { t } = useLanguage()
-  const [selectedSign, setSelectedSign] = useState<ZodiacSignId | null>(null)
+// On définit la liste ici localement pour ne plus dépendre de l'export manquant dans astrology.ts
+const zodiacSigns = [
+  { id: 'aries', name: { fr: 'Bélier', en: 'Aries' } },
+  { id: 'taurus', name: { fr: 'Taureau', en: 'Taurus' } },
+  { id: 'gemini', name: { fr: 'Gémeaux', en: 'Gemini' } },
+  { id: 'cancer', name: { fr: 'Cancer', en: 'Cancer' } },
+  { id: 'leo', name: { fr: 'Lion', en: 'Leo' } },
+  { id: 'virgo', name: { fr: 'Vierge', en: 'Virgo' } },
+  { id: 'libra', name: { fr: 'Balance', en: 'Libra' } },
+  { id: 'scorpio', name: { fr: 'Scorpion', en: 'Scorpio' } },
+  { id: 'sagittarius', name: { fr: 'Sagittaire', en: 'Sagittarius' } },
+  { id: 'capricorn', name: { fr: 'Capricorne', en: 'Capricorn' } },
+  { id: 'aquarius', name: { fr: 'Verseau', en: 'Aquarius' } },
+  { id: 'pisces', name: { fr: 'Poissons', en: 'Pisces' } },
+]
+
+export default function ZodiacSelector() {
+  const { language } = useLanguage()
+  const [selectedSign, setSelectedSign] = useState<string | null>(null)
 
   return (
-    <section className="py-12">
-      <div className="text-center mb-8">
-        <h2 className="font-serif text-3xl md:text-4xl text-cream mb-2">
-          {t.zodiac.title}
-        </h2>
-        <p className="text-muted-foreground">{t.zodiac.selectSign}</p>
+    <div className="space-y-8">
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {zodiacSigns.map((sign) => (
+          <button
+            key={sign.id}
+            onClick={() => setSelectedSign(sign.id)}
+            className={cn(
+              "p-4 rounded-xl border transition-all duration-300 flex flex-col items-center gap-2",
+              selectedSign === sign.id
+                ? "bg-amber-500/20 border-amber-500 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                : "bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:bg-slate-900/60"
+            )}
+          >
+            <span className="text-sm font-medium">
+              {language === 'fr' ? sign.name.fr : sign.name.en}
+            </span>
+          </button>
+        ))}
       </div>
 
-      {/* Zodiac Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-8">
-        {zodiacSigns.map((sign) => {
-          const isSelected = selectedSign === sign.id
-          const signName = t.zodiac[sign.id as keyof typeof t.zodiac] as string
-          
-          return (
-            <button
-              key={sign.id}
-              onClick={() => setSelectedSign(sign.id)}
-              className={cn(
-                'glass rounded-xl p-4 flex flex-col items-center gap-2 transition-all duration-300 min-h-[100px]',
-                'hover:border-primary/50 hover:scale-105',
-                isSelected && 'border-primary bg-primary/10 scale-105'
-              )}
-              aria-pressed={isSelected}
-            >
-              <span className="zodiac-symbol text-3xl">{sign.symbol}</span>
-              <span className={cn(
-                'text-sm font-medium',
-                isSelected ? 'text-primary' : 'text-cream/80'
-              )}>
-                {signName}
-              </span>
-              <span className="text-[10px] text-muted-foreground">{sign.dates}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Horoscope Panel */}
       {selectedSign && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <HoroscopePanel signId={selectedSign} />
         </div>
       )}
-    </section>
+    </div>
   )
 }
