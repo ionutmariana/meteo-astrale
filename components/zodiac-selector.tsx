@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useLanguage } from '@/contexts/language-context'
-import { zodiacSigns, type ZodiacSignId, getZodiacName } from '@/lib/astrology' 
+// On a supprimé getZodiacName de l'import car il causait l'erreur
+import { zodiacSigns, type ZodiacSignId } from '@/lib/astrology' 
 import { HoroscopePanel } from '@/components/horoscope-panel'
 import { cn } from '@/lib/utils'
 
@@ -26,7 +27,7 @@ export default function ZodiacSelector() {
         {zodiacSigns.map((sign) => (
           <button
             key={sign.id}
-            onClick={() => handleSignSelect(sign.id)}
+            onClick={() => handleSignSelect(sign.id as ZodiacSignId)}
             disabled={isLoading}
             className={cn(
               "p-4 rounded-xl border transition-all duration-300 flex flex-col items-center gap-2",
@@ -38,7 +39,8 @@ export default function ZodiacSelector() {
           >
             <span className="text-2xl">{sign.symbol}</span>
             <span className="text-xs font-medium uppercase tracking-wider">
-              {getZodiacName(sign.id, language === 'fr' ? 'fr' : 'en')}
+              {/* On affiche l'ID du signe directement pour éviter l'erreur de fonction manquante */}
+              {sign.id}
             </span>
           </button>
         ))}
