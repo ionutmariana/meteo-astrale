@@ -2,27 +2,41 @@
 
 import { useState, useEffect } from 'react'
 
-export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void, isLoading: boolean }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    date: '',
-    time: '',
-  })
-  const [cityQuery, setCityQuery] = useState('')
-  const [suggestions, setSuggestions] = useState<any[]>([])
-  const [selectedCity, setSelectedCity] = useState<any>(null)
+interface Suggestion {
+  place_id: number
+  display_name: string
+  lat: string
+  lon: string
+  name?: string
+  address?: {
+    city?: string
+    town?: string
+    village?: string
+    country?: string
+  }
+}
 
-  // Recherche de ville avec Debounce (500ms) pour éviter de saturer l'API
+export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void, isLoading: boolean }) {
+  const [name, setName] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [birthTime, setBirthTime] = useState('')
+  const [cityQuery, setCityQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [selectedCity, setSelectedCity] = useState<Suggestion | null>(null)
+
   useEffect(() => {
+    if (cityQuery.length < 3 || selectedCity) {
+      setSuggestions([])
+      return
+    }
+
     const delayDebounceFn = setTimeout(async () => {
-      if (cityQuery.length > 2 && !selectedCity) {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${cityQuery}&limit=5`)
-          const data = await res.json()
-          setSuggestions(data)
-        } catch (err) {
-          console.error("Erreur géocodage:", err)
-        }
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityQuery)}&limit=5&addressdetails=1`)
+        const data = await res.json()
+        setSuggestions(data)
+      } catch (err) {
+        console.error("Erreur géocodage:", err)
       }
     }, 500)
 
@@ -35,12 +49,26 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
       alert("Veuillez sélectionner une ville dans la liste suggérée.")
       return
     }
+
+    const addr = selectedCity.address || {}
+    const cityName = addr.city || addr.town || addr.village || selectedCity.name || ''
+    const countryName = addr.country || ''
+
     onSubmit({
-      ...formData,
-      city: selectedCity.display_name,
+      name,
+      birthDate,
+      birthTime,
+      city: cityName,
+      country: countryName,
       lat: selectedCity.lat,
-      lon: selectedCity.lon
+      lon: selectedCity.lon,
     })
+  }
+
+  const handleCitySelect = (suggestion: Suggestion) => {
+    setSelectedCity(suggestion)
+    setCityQuery(suggestion.display_name)
+    setSuggestions([])
   }
 
   return (
@@ -51,8 +79,9 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
           <input 
             type="text" 
             required
+            value={name}
             className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none transition-colors"
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
         <div className="relative">
@@ -73,11 +102,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
               {suggestions.map((s) => (
                 <li 
                   key={s.place_id}
-                  onClick={() => {
-                    setSelectedCity(s)
-                    setCityQuery(s.display_name)
-                    setSuggestions([])
-                  }}
+                  onClick={() => handleCitySelect(s)}
                   className="p-3 hover:bg-white/10 cursor-pointer text-sm text-gray-300 border-b border-white/5 last:border-0"
                 >
                   {s.display_name}
@@ -94,8 +119,9 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
           <input 
             type="date" 
             required
+            value={birthDate}
             className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none"
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
+            onChange={(e) => setBirthDate(e.target.value)}
           />
         </div>
         <div>
@@ -103,11 +129,18 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
           <input 
             type="time" 
             required
+            value={birthTime}
             className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none"
-            onChange={(e) => setFormData({...formData, time: e.target.value})}
+            onChange={(e) => setBirthTime(e.target.value)}
           />
         </div>
       </div>
+
+      {selectedCity && (
+        <div className="text-sm text-amber-400">
+          ✅ {selectedCity.display_name}
+        </div>
+      )}
 
       <button 
         type="submit" 
