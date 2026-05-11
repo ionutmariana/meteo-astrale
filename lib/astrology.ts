@@ -20,6 +20,35 @@ export const zodiacSigns = [
 export type ZodiacSignId = (typeof zodiacSigns)[number]['id']
 
 // ------------------------------------------------------------
+// TRADUCTIONS DES SIGNES
+// ------------------------------------------------------------
+
+const ZODIAC_TRANSLATIONS: Record<ZodiacSignId, { fr: string; en: string }> = {
+  aries: { fr: 'Bélier', en: 'Aries' },
+  taurus: { fr: 'Taureau', en: 'Taurus' },
+  gemini: { fr: 'Gémeaux', en: 'Gemini' },
+  cancer: { fr: 'Cancer', en: 'Cancer' },
+  leo: { fr: 'Lion', en: 'Leo' },
+  virgo: { fr: 'Vierge', en: 'Virgo' },
+  libra: { fr: 'Balance', en: 'Libra' },
+  scorpio: { fr: 'Scorpion', en: 'Scorpio' },
+  sagittarius: { fr: 'Sagittaire', en: 'Sagittarius' },
+  capricorn: { fr: 'Capricorne', en: 'Capricorn' },
+  aquarius: { fr: 'Verseau', en: 'Aquarius' },
+  pisces: { fr: 'Poissons', en: 'Pisces' },
+}
+
+/**
+ * Retourne le nom localisé d'un signe du zodiaque
+ * @param id - L'identifiant du signe (ex: 'aries')
+ * @param lang - La langue ('fr' ou 'en')
+ * @returns Le nom du signe dans la langue demandée
+ */
+export function getZodiacName(id: ZodiacSignId, lang: 'fr' | 'en' = 'en'): string {
+  return ZODIAC_TRANSLATIONS[id]?.[lang] ?? id.charAt(0).toUpperCase() + id.slice(1)
+}
+
+// ------------------------------------------------------------
 // OUTILS DE CALCUL
 // ------------------------------------------------------------
 
