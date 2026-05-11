@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useLanguage } from '@/contexts/language-context'
-// On importe la liste et le type depuis notre moteur centralisé
 import { zodiacSigns, type ZodiacSignId, getZodiacName } from '@/lib/astrology' 
 import { HoroscopePanel } from '@/components/horoscope-panel'
 import { cn } from '@/lib/utils'
@@ -15,20 +14,9 @@ export default function ZodiacSelector() {
   const handleSignSelect = async (signId: ZodiacSignId) => {
     setIsLoading(true)
     setSelectedSign(signId)
-    // Simulez un délai de chargement si nécessaire
+    // Petit délai pour l'animation de transition
     await new Promise(resolve => setTimeout(resolve, 100))
     setIsLoading(false)
-  }
-
-  // Fonction utilitaire pour obtenir le nom localisé du signe
-  const getLocalizedSignName = (signId: string): string => {
-    if (language === 'fr') {
-      // Supposition : vous avez une fonction pour obtenir le nom français
-      // du signe à partir de son identifiant
-      return getZodiacName(signId, 'fr')
-    }
-    // Fallback : capitaliser l'identifiant
-    return signId.charAt(0).toUpperCase() + signId.slice(1)
   }
 
   return (
@@ -48,11 +36,9 @@ export default function ZodiacSelector() {
                 : "bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:bg-slate-900/60"
             )}
           >
-            {/* On affiche le symbole ♈, ♉... qu'on a ajouté dans astrology.ts */}
             <span className="text-2xl">{sign.symbol}</span>
             <span className="text-xs font-medium uppercase tracking-wider">
-              {/* Nom localisé du signe */}
-              {getLocalizedSignName(sign.id)}
+              {getZodiacName(sign.id, language === 'fr' ? 'fr' : 'en')}
             </span>
           </button>
         ))}
@@ -61,10 +47,7 @@ export default function ZodiacSelector() {
       {/* Affichage du contenu du signe sélectionné */}
       {selectedSign && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <HoroscopePanel 
-            signId={selectedSign} 
-            isLoading={isLoading}
-          />
+          <HoroscopePanel signId={selectedSign} />
         </div>
       )}
     </div>
