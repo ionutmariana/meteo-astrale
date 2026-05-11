@@ -2,37 +2,23 @@
 
 import { useState } from 'react'
 import { useLanguage } from '@/contexts/language-context'
-import { getSign } from '@/lib/astrology' // On garde getSign si besoin
+// On importe la liste et le type depuis notre moteur centralisé
+import { zodiacSigns, type ZodiacSignId } from '@/lib/astrology' 
 import { HoroscopePanel } from '@/components/horoscope-panel'
 import { cn } from '@/lib/utils'
 
-// On définit la liste ici localement pour ne plus dépendre de l'export manquant dans astrology.ts
-const zodiacSigns = [
-  { id: 'aries', name: { fr: 'Bélier', en: 'Aries' } },
-  { id: 'taurus', name: { fr: 'Taureau', en: 'Taurus' } },
-  { id: 'gemini', name: { fr: 'Gémeaux', en: 'Gemini' } },
-  { id: 'cancer', name: { fr: 'Cancer', en: 'Cancer' } },
-  { id: 'leo', name: { fr: 'Lion', en: 'Leo' } },
-  { id: 'virgo', name: { fr: 'Vierge', en: 'Virgo' } },
-  { id: 'libra', name: { fr: 'Balance', en: 'Libra' } },
-  { id: 'scorpio', name: { fr: 'Scorpion', en: 'Scorpio' } },
-  { id: 'sagittarius', name: { fr: 'Sagittaire', en: 'Sagittarius' } },
-  { id: 'capricorn', name: { fr: 'Capricorne', en: 'Capricorn' } },
-  { id: 'aquarius', name: { fr: 'Verseau', en: 'Aquarius' } },
-  { id: 'pisces', name: { fr: 'Poissons', en: 'Pisces' } },
-]
-
 export default function ZodiacSelector() {
   const { language } = useLanguage()
-  const [selectedSign, setSelectedSign] = useState<string | null>(null)
+  const [selectedSign, setSelectedSign] = useState<ZodiacSignId | null>(null)
 
   return (
     <div className="space-y-8">
+      {/* Grille des signes */}
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {zodiacSigns.map((sign) => (
           <button
             key={sign.id}
-            onClick={() => setSelectedSign(sign.id)}
+            onClick={() => setSelectedSign(sign.id as ZodiacSignId)}
             className={cn(
               "p-4 rounded-xl border transition-all duration-300 flex flex-col items-center gap-2",
               selectedSign === sign.id
@@ -40,13 +26,20 @@ export default function ZodiacSelector() {
                 : "bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:bg-slate-900/60"
             )}
           >
-            <span className="text-sm font-medium">
-              {language === 'fr' ? sign.name.fr : sign.name.en}
+            {/* On affiche le symbole ♈, ♉... qu'on a ajouté dans astrology.ts */}
+            <span className="text-2xl">{sign.symbol}</span>
+            <span className="text-xs font-medium uppercase tracking-wider">
+              {/* On traduit le nom du signe (Bélier, Taureau...) */}
+              {language === 'fr' 
+                ? sign.id.charAt(0).toUpperCase() + sign.id.slice(1) // Optionnel: formatage auto
+                : sign.id.charAt(0).toUpperCase() + sign.id.slice(1)
+              }
             </span>
           </button>
         ))}
       </div>
 
+      {/* Affichage du contenu du signe sélectionné */}
       {selectedSign && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <HoroscopePanel signId={selectedSign} />
