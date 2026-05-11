@@ -1,200 +1,120 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
+import { useLanguage } from '@/contexts/language-context'
 
-type FormState = {
+interface BirthData {
   name: string
-  email: string
   birthDate: string
   birthTime: string
-  birthCity: string
-  lat: string
-  lon: string
+  city: string
+  country: string
 }
 
-export default function BirthForm({
-  onResult,
-}: {
-  onResult?: (data: any) => void
-}) {
-  const [form, setForm] = useState<FormState>({
+interface BirthFormProps {
+  onSubmit: (data: BirthData) => void
+  isLoading?: boolean
+}
+
+export function BirthForm({ onSubmit, isLoading = false }: BirthFormProps) {
+  const { language } = useLanguage()
+  const [formData, setFormData] = useState<BirthData>({
     name: '',
-    email: '',
     birthDate: '',
     birthTime: '',
-    birthCity: '',
-    lat: '',
-    lon: '',
+    city: '',
+    country: ''
   })
 
-  const [loading, setLoading] = useState(false)
-  const [suggestions, setSuggestions] = useState<any[]>([])
-  const [showSug, setShowSug] = useState(false)
-  const timer = useRef<any>(null)
-
-  async function searchCity(q: string) {
-    if (q.length < 3) {
-      setSuggestions([])
-      setShowSug(false)
-      return
-    }
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`
-    )
-    const d = await r.json()
-    setSuggestions(Array.isArray(d) ? d : [])
-    setShowSug(true)
-  }
-
-  const handleCityChange = (v: string) => {
-    setForm({ ...form, birthCity: v, lat: '', lon: '' })
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => searchCity(v), 500)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!form.lat || !form.lon) {
-      alert('Sélectionne une ville dans la liste.')
-      return
-    }
-
-    const lonNum = Number(form.lon)
-    if (!Number.isFinite(lonNum)) {
-      alert('Longitude invalide.')
-      return
-    }
-
-    const utcOffsetMinutes = Math.round(lonNum / 15) * 60
-
-    const payload = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      birthDate: form.birthDate,
-      birthTime: form.birthTime,
-      birthCity: form.birthCity.trim(),
-      lat: form.lat,
-      lon: form.lon,
-      utcOffsetMinutes,
-    }
-
-    console.log('[birth-form] POST /api/birth-chart payload:', {
-      ...payload,
-      email: payload.email ? `${payload.email.slice(0, 2)}…` : '(vide)',
-    })
-
-    if (!payload.email) {
-      alert('Email obligatoire.')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/birth-chart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        cache: 'no-store', // 🔥 empêche le cache Vercel
-      })
-
-      const data = await res.json()
-
-      console.log('[birth-form] API RESULT:', data) // 🔥 vérifie l’ascendant réel
-
-      if (!res.ok) {
-        throw new Error(data?.error || 'Erreur serveur')
-      }
-
-      // 🔥🔥🔥 LA LIGNE QUI RÉPARE TOUT 🔥🔥🔥
-      // On passe TOUTE la réponse API telle quelle au composant
-      onResult?.(data)
-
-    } catch (err) {
-      console.error('[birth-form] ERROR:', err)
-      alert('Erreur lors du calcul.')
-    } finally {
-      setLoading(false)
-    }
+    onSubmit(formData)
   }
+
+  const handleChange = (field: keyof BirthData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }))
+  }
+
+  const t = (fr: string, en: string) => language === 'fr' ? fr : en
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3"
-        placeholder="Prénom"
-        value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
-        required
-      />
-
-      <input
-        className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3"
-        type="email"
-        inputMode="email"
-        autoComplete="email"
-        name="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-        required
-      />
-
-      <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm text-slate-300 mb-1">
+          {t('Nom complet', 'Full name')}
+        </label>
         <input
-          className="rounded-xl border border-white/20 bg-white/10 px-4 py-3"
-          type="date"
-          value={form.birthDate}
-          onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
-          required
-        />
-        <input
-          className="rounded-xl border border-white/20 bg-white/10 px-4 py-3"
-          type="time"
-          value={form.birthTime}
-          onChange={(e) => setForm({ ...form, birthTime: e.target.value })}
+          type="text"
+          value={formData.name}
+          onChange={handleChange('name')}
+          className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
           required
         />
       </div>
 
-      <div className="relative">
-        <input
-          className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3"
-          placeholder="Ville de naissance"
-          value={form.birthCity}
-          onChange={(e) => handleCityChange(e.target.value)}
-          required
-        />
-        {showSug && suggestions.length > 0 && (
-          <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-white/20 bg-[#0d011a] shadow-2xl">
-            {suggestions.map((s, i) => (
-              <li
-                key={i}
-                className="cursor-pointer border-b border-white/5 p-3 text-sm hover:bg-amber-500/20"
-                onClick={() => {
-                  setForm({
-                    ...form,
-                    birthCity: s.display_name,
-                    lat: String(s.lat),
-                    lon: String(s.lon),
-                  })
-                  setShowSug(false)
-                }}
-              >
-                {s.display_name}
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm text-slate-300 mb-1">
+            {t('Date de naissance', 'Birth date')}
+          </label>
+          <input
+            type="date"
+            value={formData.birthDate}
+            onChange={handleChange('birthDate')}
+            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-300 mb-1">
+            {t('Heure de naissance', 'Birth time')}
+          </label>
+          <input
+            type="time"
+            value={formData.birthTime}
+            onChange={handleChange('birthTime')}
+            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm text-slate-300 mb-1">
+            {t('Ville de naissance', 'Birth city')}
+          </label>
+          <input
+            type="text"
+            value={formData.city}
+            onChange={handleChange('city')}
+            placeholder={t('Ex: Paris', 'Ex: London')}
+            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-300 mb-1">
+            {t('Pays (optionnel)', 'Country (optional)')}
+          </label>
+          <input
+            type="text"
+            value={formData.country}
+            onChange={handleChange('country')}
+            placeholder={t('Ex: France', 'Ex: UK')}
+            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200"
+          />
+        </div>
       </div>
 
       <button
         type="submit"
-        disabled={loading}
-        className="w-full rounded-xl bg-white py-4 font-bold text-black disabled:opacity-50"
+        disabled={isLoading}
+        className="w-full py-3 bg-amber-500/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-500/30 disabled:opacity-50"
       >
-        {loading ? 'Calcul…' : 'Calculer'}
+        {isLoading ? t('Calcul...', 'Calculating...') : t('Calculer mon thème', 'Calculate my chart')}
       </button>
     </form>
   )
