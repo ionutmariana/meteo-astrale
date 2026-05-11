@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-// On importe VOTRE moteur de calcul, pas une librairie externe
-import { createEphemeris, getSign, PLANETS } from '@/lib/astrology'
+import { createEphemeris, getSign, PLANETS, getHouse } from '@/lib/astrology'
 
 export async function POST(req: Request) {
   try {
@@ -11,13 +10,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Données manquantes.' }, { status: 400 })
     }
 
-    // 1. On crée la date (on force l'UTC pour éviter les décalages)
+    // 1. On crée la date en UTC
     const dateTime = new Date(`${birthDate}T${birthTime}:00Z`)
 
-    // 2. On utilise VOTRE fonction de calcul corrigée
+    // 2. Calcul du thème tropical (Asc, MC, maisons)
     const chart = createEphemeris(dateTime, parseFloat(lat), parseFloat(lon))
 
-    // 3. On calcule les planètes avec VOTRE moteur
+    // 3. Calcul des planètes tropicales
     const unixSec = dateTime.getTime() / 1000
     const planetsPositions = PLANETS.map(p => {
       const longitude = p.lon(unixSec)
@@ -25,11 +24,11 @@ export async function POST(req: Request) {
         name: p.name,
         sign: getSign(longitude),
         degree: longitude % 30,
-        house: 1
+        house: getHouse(longitude, chart.cusps)
       }
     })
 
-    // 4. On renvoie les données exactement comme le Front-end les attend
+    // 4. Réponse API
     return NextResponse.json({
       name: body.name,
       ascendant: {
@@ -47,9 +46,9 @@ export async function POST(req: Request) {
         degree: c % 30
       }))
     })
+
   } catch (err: any) {
     console.error('[API ERROR]:', err)
     return NextResponse.json({ error: 'Erreur lors du calcul.' }, { status: 500 })
   }
 }
-
