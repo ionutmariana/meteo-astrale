@@ -15,7 +15,13 @@ import {
 
 export function Header() {
   const { t } = useLanguage()
-  const { isPremium, userType, logout, upgradeToPremium } = useAuth()
+  const { isPremium, logout, upgradeToPremium } = useAuth()
+
+  // SÉCURITÉ : Si t n'est pas encore chargé (pendant le build Vercel), 
+  // on affiche un header vide ou on attend pour éviter l'erreur "reading nav of undefined"
+  if (!t || !t.nav) {
+    return <header className="h-16 lg:flex fixed top-0 left-0 right-0 z-50 glass border-b border-border/50" />
+  }
 
   return (
     <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">

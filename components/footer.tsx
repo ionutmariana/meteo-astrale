@@ -8,6 +8,16 @@ export function Footer() {
   const { t } = useLanguage()
   const currentYear = new Date().getFullYear()
 
+  // SÉCURITÉ CRITIQUE : Empêche l'erreur "Cannot read properties of undefined (reading 'footer')"
+  // pendant la phase de build statique de Next.js
+  if (!t || !t.footer || !t.nav) {
+    return (
+      <footer className="border-t border-border/50 bg-background/50 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-8 h-32" />
+      </footer>
+    )
+  }
+
   return (
     <footer className="border-t border-border/50 bg-background/50 backdrop-blur-sm">
       <div className="container mx-auto px-6 py-8">
