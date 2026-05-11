@@ -16,7 +16,8 @@ interface BirthFormProps {
   isLoading?: boolean
 }
 
-export function BirthForm({ onSubmit, isLoading = false }: BirthFormProps) {
+// Ajout de "default" ici pour corriger l'erreur de build
+export default function BirthForm({ onSubmit, isLoading = false }: BirthFormProps) {
   const { language } = useLanguage()
   const [formData, setFormData] = useState<BirthData>({
     name: '',
@@ -112,7 +113,7 @@ export function BirthForm({ onSubmit, isLoading = false }: BirthFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3 bg-amber-500/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-500/30 disabled:opacity-50"
+        className="w-full py-3 bg-amber-500/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-500/30 disabled:opacity-50 transition-colors"
       >
         {isLoading ? t('Calcul...', 'Calculating...') : t('Calculer mon thème', 'Calculate my chart')}
       </button>
