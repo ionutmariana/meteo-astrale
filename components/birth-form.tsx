@@ -32,7 +32,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
   const [geoError, setGeoError] = useState('')
   const [searching, setSearching] = useState(false)
 
-  // Restaurer les données au chargement
+  // 1. Restaurer les données sauvegardées au chargement
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
@@ -51,7 +51,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
     }
   }, [])
 
-  // Recherche de ville (Debounce)
+  // 2. Recherche de ville avec Debounce
   useEffect(() => {
     if (cityQuery.length < 3 || selectedCity) {
       setSuggestions([])
@@ -105,29 +105,31 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
       lon: selectedCity.lon,
     }
 
-    // 1. Sauvegarde locale
+    // Sauvegarde locale pour la prochaine visite
     localStorage.setItem('lastBirthData', JSON.stringify({ ...birthData, cityQuery, selectedCity }))
 
-    // 2. Lancer le calcul (Astro)
+    // A. Déclencher l'affichage de la carte natale (logique parente)
     onSubmit(birthData)
 
-    // 3. Envoi à Brevo (vers l'API que tu as créée)
-    if (email) {
+    // B. Envoyer toutes les données à Brevo via votre API corrigée
+    try {
       fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name,
-          email: email,
-          subject: 'Nouvelle Carte Natale',
-          message: `Calcul pour ${name} (${email}). Né(e) le ${birthDate} à ${birthTime} à ${cityName}.`
+          ...birthData,
+          subject: 'Nouveau profil astral créé',
+          message: `Calcul effectué pour ${name}.`
         }),
-      }).catch(err => console.error('Erreur Brevo:', err))
+      })
+    } catch (err) {
+      console.error('Erreur lors de l\'envoi Brevo:', err)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-sm shadow-2xl">
+      {/* Prénom & Email */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-2">Prénom</label>
@@ -147,6 +149,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
         </div>
       </div>
 
+      {/* Lieu de naissance */}
       <div className="relative">
         <label className="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-2">Lieu de naissance</label>
         <input 
@@ -168,6 +171,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
         )}
       </div>
 
+      {/* Date & Heure */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-2">Date</label>
@@ -181,6 +185,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
         </div>
       </div>
 
+      {/* Bouton de soumission */}
       <button 
         type="submit" disabled={isLoading || !selectedCity}
         className="w-full bg-gradient-to-r from-amber-600 to-orange-600 py-4 rounded-xl font-bold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
