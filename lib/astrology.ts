@@ -31,7 +31,21 @@ export function getSign(lon: number): string {
   return signs[Math.floor(normalize360(lon) / 30)];
 }
 
-// 3. Moteur planétaire (Approximation de Kepler pour planètes personnelles)
+/** * LA FONCTION MANQUANTE : getHouse
+ * Calcule dans quelle maison se trouve une planète selon les cuspides données.
+ */
+export function getHouse(lon: number, cusps: number[]): number {
+  const L = normalize360(lon);
+  for (let i = 0; i < 12; i++) {
+    const start = cusps[i];
+    const end = cusps[(i + 1) % 12];
+    const inside = start <= end ? L >= start && L < end : L >= start || L < end;
+    if (inside) return i + 1;
+  }
+  return 12;
+}
+
+// 3. Moteur planétaire (Tropical)
 export const PLANETS = [
   { 
     name: "Soleil", 
@@ -51,26 +65,17 @@ export const PLANETS = [
   {
     name: "Mercure",
     symbol: "☿",
-    lon: (ts: number) => {
-      const t = (ts / 86400 + 2440587.5 - 2451545.0) / 36525;
-      return normalize360(252.25 + 149472.67 * t); // Approximation rapide
-    }
+    lon: (ts: number) => normalize360(252.25 + 149472.67 * ((ts / 86400 + 2440587.5 - 2451545.0) / 36525))
   },
   {
     name: "Vénus",
     symbol: "♀",
-    lon: (ts: number) => {
-      const t = (ts / 86400 + 2440587.5 - 2451545.0) / 36525;
-      return normalize360(181.98 + 58517.81 * t);
-    }
+    lon: (ts: number) => normalize360(181.98 + 58517.81 * ((ts / 86400 + 2440587.5 - 2451545.0) / 36525))
   },
   {
     name: "Mars",
     symbol: "♂",
-    lon: (ts: number) => {
-      const t = (ts / 86400 + 2440587.5 - 2451545.0) / 36525;
-      return normalize360(355.45 + 19140.30 * t);
-    }
+    lon: (ts: number) => normalize360(355.45 + 19140.30 * ((ts / 86400 + 2440587.5 - 2451545.0) / 36525))
   }
 ];
 
@@ -98,20 +103,10 @@ export const mockDailyTransits = [] as any[];
 export const mockHoroscopes = {} as any;
 
 export const getZodiacName = (id: string, lang: string = 'fr') => {
-  const signNames: Record<string, Record<string, string>> = {
-    aries: { fr: 'Bélier', en: 'Aries' },
-    taurus: { fr: 'Taureau', en: 'Taurus' },
-    gemini: { fr: 'Gémeaux', en: 'Gemini' },
-    cancer: { fr: 'Cancer', en: 'Cancer' },
-    leo: { fr: 'Lion', en: 'Leo' },
-    virgo: { fr: 'Vierge', en: 'Virgo' },
-    libra: { fr: 'Balance', en: 'Libra' },
-    scorpio: { fr: 'Scorpion', en: 'Scorpio' },
-    sagittarius: { fr: 'Sagittaire', en: 'Sagittarius' },
-    capricorn: { fr: 'Capricorne', en: 'Capricorn' },
-    aquarius: { fr: 'Verseau', en: 'Aquarius' },
-    pisces: { fr: 'Poissons', en: 'Pisces' },
+  const names: Record<string, string> = {
+    aries: 'Bélier', taurus: 'Taureau', gemini: 'Gémeaux', cancer: 'Cancer',
+    leo: 'Lion', virgo: 'Vierge', libra: 'Balance', scorpio: 'Scorpion',
+    sagittarius: 'Sagittaire', capricorn: 'Capricorne', aquarius: 'Verseau', pisces: 'Poissons'
   };
-
-  return signNames[id.toLowerCase()]?.[lang] || id;
+  return names[id.toLowerCase()] || id;
 };
