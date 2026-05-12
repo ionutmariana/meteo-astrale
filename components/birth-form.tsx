@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from 'react'
 
+const NOMINATIM_HEADERS = {
+  headers: {
+    'User-Agent': 'MeteoAstrale/1.0 (irtofan@gmail.com)'
+  }
+}
+
 interface Suggestion {
   place_id: number
   display_name: string
   lat: string
   lon: string
-  name?: string
   address?: {
     city?: string
     town?: string
@@ -23,38 +28,77 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
   const [cityQuery, setCityQuery] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [selectedCity, setSelectedCity] = useState<Suggestion | null>(null)
+  const [geoError, setGeoError] = useState('')
 
+  // Précharger les données sauvegardées
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('lastBirthData')
+      if (saved) {
+        const data = JSON.parse(saved)
+        setName(data.name || '')
+        setBirthDate(data.birthDate || '')
+        setBirthTime(data.birthTime || '')
+        if (data.cityQuery) setCityQuery(data.cityQuery)
+        if (data.selectedCity) setSelectedCity(data.selectedCity)
+      }
+    } catch {
+      // Ignorer les erreurs de parsing
+    }
+  }, [])
+
+  // Recherche de ville avec debounce
   useEffect(() => {
     if (cityQuery.length < 3 || selectedCity) {
       setSuggestions([])
+      setGeoError('')
       return
     }
 
-    const delayDebounceFn = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityQuery)}&limit=5&addressdetails=1`)
+        setGeoError('')
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityQuery)}&limit=5&addressdetails=1`,
+          NOMINATIM_HEADERS
+        )
         const data = await res.json()
-        setSuggestions(data)
+
+        if (!data || data.length === 0) {
+          setGeoError('Aucune ville trouvée. Essayez un autre nom.')
+          setSuggestions([])
+        } else {
+          setSuggestions(data)
+        }
       } catch (err) {
-        console.error("Erreur géocodage:", err)
+        console.error('Erreur géocodage:', err)
+        setGeoError('Erreur de connexion. Réessayez.')
       }
     }, 500)
 
-    return () => clearTimeout(delayDebounceFn)
+    return () => clearTimeout(timer)
   }, [cityQuery, selectedCity])
+
+  const handleSelectCity = (suggestion: Suggestion) => {
+    setSelectedCity(suggestion)
+    setCityQuery(suggestion.display_name)
+    setSuggestions([])
+    setGeoError('')
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
     if (!selectedCity) {
-      alert("Veuillez sélectionner une ville dans la liste suggérée.")
+      setGeoError('Veuillez sélectionner une ville dans la liste.')
       return
     }
 
     const addr = selectedCity.address || {}
-    const cityName = addr.city || addr.town || addr.village || selectedCity.name || ''
+    const cityName = addr.city || addr.town || addr.village || cityQuery.split(',')[0].trim()
     const countryName = addr.country || ''
 
-    onSubmit({
+    const birthData = {
       name,
       birthDate,
       birthTime,
@@ -62,18 +106,36 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
       country: countryName,
       lat: selectedCity.lat,
       lon: selectedCity.lon,
-    })
+    }
+
+    // Sauvegarder pour la prochaine visite
+    try {
+      localStorage.setItem('lastBirthData', JSON.stringify({
+        ...birthData,
+        cityQuery,
+        selectedCity,
+      }))
+    } catch {
+      // Ignorer
+    }
+
+    onSubmit(birthData)
   }
 
-  const handleCitySelect = (suggestion: Suggestion) => {
-    setSelectedCity(suggestion)
-    setCityQuery(suggestion.display_name)
-    setSuggestions([])
+  // Formater l'affichage : "Bucharest, Romania" au lieu du nom complet
+  const formatSuggestion = (s: Suggestion): string => {
+    const addr = s.address || {}
+    const city = addr.city || addr.town || addr.village || ''
+    const country = addr.country || ''
+    if (city && country) return `${city}, ${country}`
+    if (city) return city
+    return s.display_name.split(',').slice(0, 2).join(', ')
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Prénom */}
         <div>
           <label className="text-sm text-gray-400 block mb-2">Prénom</label>
           <input 
@@ -84,6 +146,8 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
             onChange={(e) => setName(e.target.value)}
           />
         </div>
+
+        {/* Ville de naissance */}
         <div className="relative">
           <label className="text-sm text-gray-400 block mb-2">Ville de naissance</label>
           <input 
@@ -97,23 +161,31 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
               setSelectedCity(null)
             }}
           />
+          
+          {/* Suggestions */}
           {suggestions.length > 0 && !selectedCity && (
             <ul className="absolute z-50 bg-slate-900 border border-white/20 rounded-lg mt-1 w-full max-h-40 overflow-y-auto shadow-2xl">
               {suggestions.map((s) => (
                 <li 
                   key={s.place_id}
-                  onClick={() => handleCitySelect(s)}
+                  onClick={() => handleSelectCity(s)}
                   className="p-3 hover:bg-white/10 cursor-pointer text-sm text-gray-300 border-b border-white/5 last:border-0"
                 >
-                  {s.display_name}
+                  {formatSuggestion(s)}
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Message d'erreur géocodage */}
+          {geoError && (
+            <p className="text-red-400 text-xs mt-1">{geoError}</p>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Date de naissance */}
         <div>
           <label className="text-sm text-gray-400 block mb-2">Date de naissance</label>
           <input 
@@ -124,6 +196,8 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
             onChange={(e) => setBirthDate(e.target.value)}
           />
         </div>
+
+        {/* Heure de naissance */}
         <div>
           <label className="text-sm text-gray-400 block mb-2">Heure de naissance</label>
           <input 
@@ -136,9 +210,10 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
         </div>
       </div>
 
+      {/* Ville sélectionnée */}
       {selectedCity && (
-        <div className="text-sm text-amber-400">
-          ✅ {selectedCity.display_name}
+        <div className="text-sm text-amber-400 flex items-center gap-2">
+          ✅ {formatSuggestion(selectedCity)}
         </div>
       )}
 
@@ -147,7 +222,7 @@ export function BirthForm({ onSubmit, isLoading }: { onSubmit: (data: any) => vo
         disabled={isLoading || !selectedCity}
         className="w-full bg-gradient-to-r from-amber-600 to-orange-600 py-4 rounded-xl font-bold text-white hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-orange-900/20"
       >
-        {isLoading ? "Calcul cosmique en cours..." : "Calculer ma Carte Natale"}
+        {isLoading ? 'Calcul cosmique en cours...' : 'Calculer ma Carte Natale'}
       </button>
     </form>
   )
