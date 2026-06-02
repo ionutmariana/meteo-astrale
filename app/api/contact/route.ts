@@ -73,11 +73,11 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         sender: {
           name: 'Météo Astrale - Système',
-          email: 'irtofan@gmail.com',
+                    email: 'contact@meteo-astrale.fr',
         },
         to: [
           {
-            email: 'irtofan@gmail.com',
+                      email: 'contact@meteo-astrale.fr',
             name: 'Admin Météo Astrale',
           },
         ],
