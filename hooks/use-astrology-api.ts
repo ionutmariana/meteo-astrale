@@ -41,9 +41,9 @@ function saveToCache(data: PlanetData[]): void {
   }
 }
 
-// Détection de la rétrogradation : vitesse angulaire négative (lon J+1h < lon J)
+    // Détection de la rétrogradation : vitesse angulaire négative (lon J+1j < lon J)
 function isRetrograde(planet: typeof PLANETS[0], unixSec: number): boolean {
-  const delta = 3600 // 1 heure en secondes
+      const delta = 86400 // 1 jour en secondes (pour planètes lentes comme Saturne)
   const lon1 = planet.lon(unixSec)
   const lon2 = planet.lon(unixSec + delta)
   // Correction pour le passage 359° -> 0°
